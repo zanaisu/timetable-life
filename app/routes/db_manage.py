@@ -415,18 +415,35 @@ def initialize_db():
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         backup_filename = f"db_backup_before_initialize_{timestamp}.db"
         backup_path = os.path.join(CACHE_DIR, backup_filename)
-        shutil.copy2(db_path, backup_path)
-        flash(f'Backed up existing database as "{backup_filename}"', 'success')
+        try:
+            shutil.copy2(db_path, backup_path)
+            flash(f'Backed up existing database as "{backup_filename}"', 'success')
+        except Exception as e:
+            flash(f'Could not backup existing database: {str(e)}', 'error')
     
     # Close any database connections
-    db.session.close()
-    db.engine.dispose()
-    
-    # Remove existing database if it exists
-    if os.path.exists(db_path):
-        os.remove(db_path)
-    
     try:
+        db.session.close()
+        db.engine.dispose()
+        
+        # Give the system a moment to release file locks (Windows specific)
+        import time
+        time.sleep(1)
+        
+        # On Windows, sometimes we need a more aggressive approach
+        import gc
+        gc.collect()  # Force garbage collection
+        
+        # Remove existing database if it exists
+        if os.path.exists(db_path):
+            try:
+                os.remove(db_path)
+            except PermissionError:
+                # If still can't delete, inform the user
+                flash('Unable to delete the existing database file - it may be in use by another process. ' +
+                      'Try closing all applications that might be using it and try again.', 'error')
+                return redirect(url_for('db_manage.index'))
+        
         # Recreate the database and initialize tables
         from app import create_app
         from app.models import create_tables

@@ -168,6 +168,10 @@ def fill_database():
         tuple: (success, message) where success is a boolean and message is a string
     """
     try:
+        # Make sure database connections are properly managed
+        db.session.close()
+        db.engine.dispose()
+        
         # Step 1: Ensure database tables exist
         from app.models import create_tables
         create_tables()
@@ -184,4 +188,5 @@ def fill_database():
             return False, f"Tables and task types created, but curriculum import failed: {message}"
             
     except Exception as e:
+        db.session.rollback()  # Rollback any pending transactions
         return False, f"Error filling database: {str(e)}"
