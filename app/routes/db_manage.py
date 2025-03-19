@@ -26,10 +26,6 @@ def password_required(f):
     """Decorator to require password authentication for routes."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Skip password check if env var is set (for CLI mode)
-        if os.environ.get('DB_MANAGE_MODE') == 'true':
-            return f(*args, **kwargs)
-            
         password = request.cookies.get('db_manage_auth')
         # Check if password is in session or in request
         if not password and request.method == 'POST':
@@ -59,21 +55,17 @@ def get_db_path():
         return None
 
 # Login route
-@db_manage_bp.route('/login', methods=['POST'])
-def login():
-    password = request.form.get('password')
+@db_manage_bp.route('/', methods=['GET'])
+def index():
+    # Check if already authenticated
+    password = request.cookies.get('db_manage_auth')
     if password == DB_PASSWORD:
-        response = redirect(url_for('db_manage.index'))
-        response.set_cookie('db_manage_auth', password, max_age=3600)  # 1 hour expiry
-        return response
+        return show_dashboard()
     else:
-        flash('Invalid password', 'error')
         return render_template('db_manage/login.html')
 
-# Main db management page
-@db_manage_bp.route('/', methods=['GET'])
-@password_required
-def index():
+# Dashboard display function
+def show_dashboard():
     # Get database file info
     db_path = get_db_path()
     db_info = {}
@@ -103,6 +95,18 @@ def index():
     return render_template('db_manage/index.html', 
                           db_info=db_info, 
                           cached_dbs=cached_dbs)
+
+# Login route
+@db_manage_bp.route('/login', methods=['POST'])
+def login():
+    password = request.form.get('password')
+    if password == DB_PASSWORD:
+        response = redirect(url_for('db_manage.index'))
+        response.set_cookie('db_manage_auth', password, max_age=3600)  # 1 hour expiry
+        return response
+    else:
+        flash('Invalid password', 'error')
+        return render_template('db_manage/login.html')
 
 # Import curriculum data
 @db_manage_bp.route('/import-curriculum', methods=['POST'])
