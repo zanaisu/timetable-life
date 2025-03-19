@@ -9,6 +9,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from werkzeug.utils import secure_filename
 from app import db
 from app.utils.curriculum_importer import import_curriculum_data
+from app.models.task import TaskType
+from app.utils.database_helpers import fill_database
 
 # Create blueprint
 db_manage_bp = Blueprint('db_manage', __name__, url_prefix='/db')
@@ -436,5 +438,41 @@ def initialize_db():
         flash('Database initialized successfully with empty tables', 'success')
     except Exception as e:
         flash(f'Error initializing database: {str(e)}', 'error')
+    
+    return redirect(url_for('db_manage.index'))
+
+# Repair database by ensuring default types exist
+@db_manage_bp.route('/repair', methods=['POST'])
+@password_required
+def repair_database():
+    """Repair the database by ensuring all default data exists."""
+    try:
+        # Ensure the database tables exist
+        from app.models import create_tables
+        create_tables()
+        
+        # Create default task types
+        TaskType.create_default_types()
+        
+        flash('Database repaired successfully: tables and default task types created', 'success')
+        
+        # Perform any other database repairs or migrations here
+        
+        return redirect(url_for('db_manage.index'))
+    except Exception as e:
+        flash(f'Error repairing database: {str(e)}', 'error')
+        return redirect(url_for('db_manage.index'))
+
+# Combined function to fill database (repair + import curriculum)
+@db_manage_bp.route('/fill', methods=['POST'])
+@password_required
+def fill_db():
+    """Fill the database with all required data including curriculum."""
+    success, message = fill_database()
+    
+    if success:
+        flash(message, 'success')
+    else:
+        flash(message, 'error')
     
     return redirect(url_for('db_manage.index')) 

@@ -1,4 +1,7 @@
 from app.models.curriculum import Subject, Topic, Subtopic
+from app.models.task import TaskType
+from app import db
+from app.utils.curriculum_importer import import_curriculum_data
 
 def get_subject_code(subject_name):
     """
@@ -153,3 +156,32 @@ def get_subtopic_by_key(subtopic_key):
     subtopic = Subtopic.query.filter_by(topic_id=topic.id, title=subtopic_title).first()
     
     return subtopic
+
+def fill_database():
+    """
+    Performs a complete database setup:
+    1. Ensures all tables exist
+    2. Creates default task types
+    3. Imports curriculum data
+    
+    Returns:
+        tuple: (success, message) where success is a boolean and message is a string
+    """
+    try:
+        # Step 1: Ensure database tables exist
+        from app.models import create_tables
+        create_tables()
+        
+        # Step 2: Create default task types
+        TaskType.create_default_types()
+        
+        # Step 3: Import curriculum data
+        success, message = import_curriculum_data()
+        
+        if success:
+            return True, "Database filled successfully with tables, task types, and curriculum data."
+        else:
+            return False, f"Tables and task types created, but curriculum import failed: {message}"
+            
+    except Exception as e:
+        return False, f"Error filling database: {str(e)}"

@@ -60,4 +60,16 @@ def create_app(config_name='default'):
     app.register_blueprint(curriculum_bp, url_prefix='/api/curriculum')
     app.register_blueprint(db_manage_bp)
     
+    # Ensure database tables exist and default task types exist
+    with app.app_context():
+        try:
+            # First ensure tables exist
+            db.create_all()
+            
+            # Then create default task types
+            from app.models.task import TaskType
+            TaskType.create_default_types()
+        except Exception as e:
+            app.logger.error(f"Error during initialization: {str(e)}")
+    
     return app

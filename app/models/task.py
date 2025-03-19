@@ -1,5 +1,6 @@
 from datetime import datetime
 from app import db
+from sqlalchemy.exc import OperationalError
 
 class TaskType(db.Model):
     """Model representing different types of tasks (notes, quiz, practice, uplearn)."""
@@ -28,19 +29,41 @@ class TaskType(db.Model):
     @classmethod
     def create_default_types(cls):
         """Create default task types if they don't exist."""
-        default_types = [
-            ('notes', 'Taking or reviewing notes on a topic'),
-            ('quiz', 'Testing knowledge through questions'),
-            ('practice', 'Applying knowledge through practice problems'),
-            ('uplearn', 'Completing Uplearn modules')
-        ]
-        
-        for name, description in default_types:
-            if not cls.query.filter_by(name=name).first():
-                task_type = cls(name=name, description=description)
-                db.session.add(task_type)
-        
-        db.session.commit()
+        try:
+            # Check if the table exists first by trying to get count
+            count = db.session.query(db.func.count(cls.id)).scalar()
+            
+            default_types = [
+                ('notes', 'Taking or reviewing notes on a topic'),
+                ('quiz', 'Testing knowledge through questions'),
+                ('practice', 'Applying knowledge through practice problems'),
+                ('uplearn', 'Completing Uplearn modules')
+            ]
+            
+            # Simplified logic: if there are no task types, create all of them
+            if count == 0:
+                for name, description in default_types:
+                    task_type = cls(name=name, description=description)
+                    db.session.add(task_type)
+                db.session.commit()
+                return True
+            
+            # If table exists and has some data, check for missing types
+            for name, description in default_types:
+                if not cls.query.filter_by(name=name).first():
+                    task_type = cls(name=name, description=description)
+                    db.session.add(task_type)
+            
+            db.session.commit()
+            return True
+            
+        except OperationalError:
+            # The table doesn't exist yet - this will be handled when create_all is called
+            return False
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error creating default task types: {str(e)}")
+            return False
     
     def __repr__(self):
         return f"<TaskType {self.name}>"

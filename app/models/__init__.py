@@ -9,4 +9,8 @@ def create_tables():
     """
     from app import db
     db.create_all()
+    
+    # Create default task types
+    TaskType.create_default_types()
+    
     return True

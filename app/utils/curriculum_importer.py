@@ -2,6 +2,7 @@ import json
 import os
 from app import db
 from app.models.curriculum import Subject, Topic, Subtopic
+from app.models.task import TaskType
 from sqlalchemy.exc import SQLAlchemyError
 
 def import_curriculum_data():
@@ -19,6 +20,9 @@ def import_curriculum_data():
         
         # Parse the JSON
         curriculum_data = json.loads(clean_content)
+        
+        # First, create the default task types if they don't exist
+        TaskType.create_default_types()
         
         # Import the data within a transaction
         for subject_name, subject_data in curriculum_data.items():

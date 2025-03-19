@@ -310,8 +310,10 @@
                     <form action="{{ url_for('db_manage.cache_current') }}" method="post">
                         <button type="submit" class="button button-success">Cache Current Database</button>
                     </form>
-                    <button id="importCurriculumBtn" class="button button-warning">Import Curriculum Data</button>
                     <button id="inspectDbBtn" class="button button-info">View Database Structure</button>
+                    <form action="{{ url_for('db_manage.fill_db') }}" method="post">
+                        <button type="submit" class="button button-warning">Fill Database</button>
+                    </form>
                 </div>
                 <div class="flex-row" style="margin-top: 10px;">
                     <button id="initializeDbBtn" class="button button-danger">Initialize New Database</button>
@@ -320,6 +322,9 @@
                 <p>No database information available.</p>
                 <div class="flex-row" style="margin-top: 15px;">
                     <button id="initializeDbBtn" class="button button-warning">Initialize New Database</button>
+                    <form action="{{ url_for('db_manage.fill_db') }}" method="post">
+                        <button type="submit" class="button button-success">Fill Database</button>
+                    </form>
                 </div>
             {% endif %}
         </div>
@@ -396,7 +401,7 @@
     </div>
     
     <!-- Import Curriculum Confirmation Modal -->
-    <div id="importCurriculumModal" class="modal">
+    <div id="importCurriculumModal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Import Curriculum Data</h2>
@@ -428,6 +433,21 @@
         </div>
     </div>
     
+    <!-- Fill Database Info -->
+    <div class="modal" id="fillInfoModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Fill Database</h2>
+            <p>The Fill Database function combines repair and curriculum import:</p>
+            <ul style="text-align: left; margin: 15px 0;">
+                <li>Ensures all database tables exist</li>
+                <li>Creates default task types if missing</li>
+                <li>Imports curriculum data from JSON file</li>
+            </ul>
+            <p>Use this to set up your database completely in one step.</p>
+        </div>
+    </div>
+    
     <!-- Database Structure Modal -->
     <div id="dbStructureModal" class="modal">
         <div class="modal-content">
@@ -453,16 +473,14 @@
     </div>
     
     <script>
-        // Modal handling for curriculum import
-        const importCurriculumBtn = document.getElementById('importCurriculumBtn');
-        const importCurriculumModal = document.getElementById('importCurriculumModal');
+        // Modal handling for database actions
         const inspectDbBtn = document.getElementById('inspectDbBtn');
         const dbStructureModal = document.getElementById('dbStructureModal');
         const tableViewModal = document.getElementById('tableViewModal');
         const initializeDbBtn = document.getElementById('initializeDbBtn');
         const initializeDbModal = document.getElementById('initializeDbModal');
+        const fillInfoModal = document.getElementById('fillInfoModal');
         const closeButtons = document.querySelectorAll('.close');
-        const cancelImportBtn = document.getElementById('cancelImport');
         const cancelInitializeBtn = document.getElementById('cancelInitialize');
         const viewModeSelector = document.getElementById('viewMode');
         const gridView = document.getElementById('gridView');
@@ -789,16 +807,21 @@
         });
         
         // Open modal when button is clicked
-        if (importCurriculumBtn) {
-            importCurriculumBtn.addEventListener('click', function() {
-                importCurriculumModal.style.display = 'block';
-            });
-        }
-        
-        // Open initialize database modal when button is clicked
         if (initializeDbBtn) {
             initializeDbBtn.addEventListener('click', function() {
                 initializeDbModal.style.display = 'block';
+            });
+        }
+        
+        // Show fill info when Fill Database button is hovered
+        const fillDatabaseBtn = document.querySelector('button[type="submit"][class*="button-warning"]');
+        if (fillDatabaseBtn) {
+            fillDatabaseBtn.addEventListener('mouseover', function() {
+                fillInfoModal.style.display = 'block';
+            });
+            
+            fillDatabaseBtn.addEventListener('mouseout', function() {
+                fillInfoModal.style.display = 'none';
             });
         }
         
@@ -808,13 +831,6 @@
                 this.closest('.modal').style.display = 'none';
             });
         });
-        
-        // Close modal on Cancel click
-        if (cancelImportBtn) {
-            cancelImportBtn.addEventListener('click', function() {
-                importCurriculumModal.style.display = 'none';
-            });
-        }
         
         // Close initialize modal on Cancel click
         if (cancelInitializeBtn) {
