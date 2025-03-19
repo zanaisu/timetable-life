@@ -12,23 +12,7 @@ from app import db, migrate
 def register_commands(app):
     """Register Flask CLI commands."""
     
-    @app.cli.command('db-init')
-    @with_appcontext
-    def db_init():
-        """Initialize database migrations."""
-        click.echo('Initializing database migrations...')
-        # This creates the migrations directory and repository
-        try:
-            migrations_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'migrations')
-            if not os.path.exists(migrations_dir):
-                # If migrations directory doesn't exist, we need to initialize it
-                from flask_migrate import init as migrate_init
-                migrate_init()
-                click.echo(click.style('Migration repository created successfully.', fg='green'))
-            else:
-                click.echo(click.style('Migration repository already exists.', fg='yellow'))
-        except Exception as e:
-            click.echo(click.style(f"Error initializing migrations: {str(e)}", fg='red'))
+    # The db-init command has been removed as it's now handled by the db-manage interface
     
     @app.cli.command('import-curriculum')
     @with_appcontext

@@ -7,6 +7,7 @@ from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
 from werkzeug.utils import secure_filename
 from app import db
+from app.utils.curriculum_importer import import_curriculum_data
 
 # Create blueprint
 db_manage_bp = Blueprint('db_manage', __name__, url_prefix='/db')
@@ -102,6 +103,23 @@ def index():
     return render_template('db_manage/index.html', 
                           db_info=db_info, 
                           cached_dbs=cached_dbs)
+
+# Import curriculum data
+@db_manage_bp.route('/import-curriculum', methods=['POST'])
+@password_required
+def import_curriculum():
+    """Import curriculum data into the database."""
+    try:
+        success, message = import_curriculum_data()
+        
+        if success:
+            flash(f'Curriculum import successful: {message}', 'success')
+        else:
+            flash(f'Curriculum import failed: {message}', 'error')
+    except Exception as e:
+        flash(f'Error importing curriculum data: {str(e)}', 'error')
+        
+    return redirect(url_for('db_manage.index'))
 
 # Export current database
 @db_manage_bp.route('/export', methods=['GET'])

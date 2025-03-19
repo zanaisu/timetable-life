@@ -79,6 +79,12 @@
         .button-success:hover {
             background-color: #449d44;
         }
+        .button-warning {
+            background-color: #f0ad4e;
+        }
+        .button-warning:hover {
+            background-color: #ec971f;
+        }
         .form-group {
             margin-bottom: 15px;
         }
@@ -111,6 +117,41 @@
         }
         .apply-form {
             display: inline;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .modal-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
     </style>
 </head>
@@ -146,6 +187,7 @@
                     <form action="{{ url_for('db_manage.cache_current') }}" method="post">
                         <button type="submit" class="button button-success">Cache Current Database</button>
                     </form>
+                    <button id="importCurriculumBtn" class="button button-warning">Import Curriculum Data</button>
                 </div>
             {% else %}
                 <p>No database information available.</p>
@@ -212,5 +254,57 @@
             <a href="/" class="button">Return to Application</a>
         </div>
     </div>
+    
+    <!-- Import Curriculum Confirmation Modal -->
+    <div id="importCurriculumModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Import Curriculum Data</h2>
+            <p>Are you sure you want to import curriculum data?</p>
+            <p>This will add or update curriculum data in the current database.</p>
+            <div class="modal-buttons">
+                <button id="cancelImport" class="button button-danger">Cancel</button>
+                <form action="{{ url_for('db_manage.import_curriculum') }}" method="post">
+                    <button type="submit" class="button button-success">Import</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Modal handling
+        const importCurriculumBtn = document.getElementById('importCurriculumBtn');
+        const importCurriculumModal = document.getElementById('importCurriculumModal');
+        const closeBtn = document.querySelector('.close');
+        const cancelImportBtn = document.getElementById('cancelImport');
+        
+        // Open modal when button is clicked
+        if (importCurriculumBtn) {
+            importCurriculumBtn.addEventListener('click', function() {
+                importCurriculumModal.style.display = 'block';
+            });
+        }
+        
+        // Close modal on X click
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                importCurriculumModal.style.display = 'none';
+            });
+        }
+        
+        // Close modal on Cancel click
+        if (cancelImportBtn) {
+            cancelImportBtn.addEventListener('click', function() {
+                importCurriculumModal.style.display = 'none';
+            });
+        }
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target == importCurriculumModal) {
+                importCurriculumModal.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html> 
