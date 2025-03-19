@@ -2,6 +2,7 @@ import os
 import shutil
 import time
 import json
+import sqlite3
 from datetime import datetime
 from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
@@ -26,6 +27,10 @@ def password_required(f):
     """Decorator to require password authentication for routes."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Skip password check if env var is set (for CLI mode)
+        if os.environ.get('DB_MANAGE_MODE') == 'true':
+            return f(*args, **kwargs)
+            
         password = request.cookies.get('db_manage_auth')
         # Check if password is in session or in request
         if not password and request.method == 'POST':
@@ -55,17 +60,21 @@ def get_db_path():
         return None
 
 # Login route
-@db_manage_bp.route('/', methods=['GET'])
-def index():
-    # Check if already authenticated
-    password = request.cookies.get('db_manage_auth')
+@db_manage_bp.route('/login', methods=['POST'])
+def login():
+    password = request.form.get('password')
     if password == DB_PASSWORD:
-        return show_dashboard()
+        response = redirect(url_for('db_manage.index'))
+        response.set_cookie('db_manage_auth', password, max_age=3600)  # 1 hour expiry
+        return response
     else:
+        flash('Invalid password', 'error')
         return render_template('db_manage/login.html')
 
-# Dashboard display function
-def show_dashboard():
+# Main db management page
+@db_manage_bp.route('/', methods=['GET'])
+@password_required
+def index():
     # Get database file info
     db_path = get_db_path()
     db_info = {}
@@ -95,18 +104,6 @@ def show_dashboard():
     return render_template('db_manage/index.html', 
                           db_info=db_info, 
                           cached_dbs=cached_dbs)
-
-# Login route
-@db_manage_bp.route('/login', methods=['POST'])
-def login():
-    password = request.form.get('password')
-    if password == DB_PASSWORD:
-        response = redirect(url_for('db_manage.index'))
-        response.set_cookie('db_manage_auth', password, max_age=3600)  # 1 hour expiry
-        return response
-    else:
-        flash('Invalid password', 'error')
-        return render_template('db_manage/login.html')
 
 # Import curriculum data
 @db_manage_bp.route('/import-curriculum', methods=['POST'])
@@ -258,9 +255,186 @@ def delete_cached(filename):
     
     return redirect(url_for('db_manage.index'))
 
-# Restart the application
+# Get database structure
+@db_manage_bp.route('/inspect', methods=['GET'])
+@password_required
+def inspect_db():
+    """Get structure of the current database"""
+    db_path = get_db_path()
+    if not db_path or not os.path.exists(db_path):
+        flash('Database file not found', 'error')
+        return redirect(url_for('db_manage.index'))
+    
+    try:
+        # Connect to the database
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Get list of tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
+        
+        structure = {}
+        
+        # Get columns for each table
+        for table in tables:
+            table_name = table[0]
+            cursor.execute(f"PRAGMA table_info({table_name});")
+            columns = cursor.fetchall()
+            
+            # Count rows in the table
+            cursor.execute(f"SELECT COUNT(*) FROM {table_name};")
+            row_count = cursor.fetchone()[0]
+            
+            structure[table_name] = {
+                'columns': [{'name': col[1], 'type': col[2]} for col in columns],
+                'row_count': row_count
+            }
+        
+        conn.close()
+        return jsonify(structure)
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# View table data
+@db_manage_bp.route('/table/<table_name>', methods=['GET'])
+@password_required
+def view_table(table_name):
+    """View data in a specific table"""
+    db_path = get_db_path()
+    if not db_path or not os.path.exists(db_path):
+        flash('Database file not found', 'error')
+        return redirect(url_for('db_manage.index'))
+    
+    try:
+        # Get page parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
+        offset = (page - 1) * per_page
+        
+        # Connect to the database
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row  # Return rows as dictionaries
+        cursor = conn.cursor()
+        
+        # Get total row count
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name};")
+        total_rows = cursor.fetchone()[0]
+        
+        # Get column names
+        cursor.execute(f"PRAGMA table_info({table_name});")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        # Get data with pagination
+        cursor.execute(f"SELECT * FROM {table_name} LIMIT {per_page} OFFSET {offset};")
+        rows = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        
+        # Calculate pagination info
+        total_pages = (total_rows + per_page - 1) // per_page
+        
+        return jsonify({
+            'table_name': table_name,
+            'columns': columns,
+            'rows': rows,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total_rows': total_rows,
+                'total_pages': total_pages
+            }
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# List all database files in cache with more details
+@db_manage_bp.route('/cache-list', methods=['GET'])
+@password_required
+def list_cached_dbs():
+    """Get a detailed list of all cached database files"""
+    cached_dbs = []
+    
+    for filename in os.listdir(CACHE_DIR):
+        if filename.endswith('.db'):
+            file_path = os.path.join(CACHE_DIR, filename)
+            stats = os.stat(file_path)
+            size = stats.st_size
+            created_time = datetime.fromtimestamp(stats.st_ctime)
+            modified_time = datetime.fromtimestamp(stats.st_mtime)
+            
+            # Try to get table count
+            table_count = 0
+            try:
+                conn = sqlite3.connect(file_path)
+                cursor = conn.cursor()
+                cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table';")
+                table_count = cursor.fetchone()[0]
+                conn.close()
+            except:
+                pass
+            
+            cached_dbs.append({
+                'name': filename,
+                'size': size,
+                'size_formatted': f"{size / 1024:.2f} KB",
+                'created': created_time.isoformat(),
+                'created_formatted': created_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'modified': modified_time.isoformat(),
+                'modified_formatted': modified_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'table_count': table_count
+            })
+    
+    # Sort by modified time (newest first)
+    cached_dbs.sort(key=lambda x: x['modified'], reverse=True)
+    
+    return jsonify(cached_dbs)
+
 @db_manage_bp.route('/restart', methods=['GET'])
 @password_required
 def restart_app():
     # This is a placeholder view for the restart page
-    return render_template('db_manage/restart.html') 
+    return render_template('db_manage/restart.html')
+
+# Initialize a new empty database
+@db_manage_bp.route('/initialize', methods=['POST'])
+@password_required
+def initialize_db():
+    """Initialize a fresh database"""
+    db_path = get_db_path()
+    if not db_path:
+        flash('Current database configuration not supported', 'error')
+        return redirect(url_for('db_manage.index'))
+    
+    # Backup current database first if it exists
+    if os.path.exists(db_path):
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_filename = f"db_backup_before_initialize_{timestamp}.db"
+        backup_path = os.path.join(CACHE_DIR, backup_filename)
+        shutil.copy2(db_path, backup_path)
+        flash(f'Backed up existing database as "{backup_filename}"', 'success')
+    
+    # Close any database connections
+    db.session.close()
+    db.engine.dispose()
+    
+    # Remove existing database if it exists
+    if os.path.exists(db_path):
+        os.remove(db_path)
+    
+    try:
+        # Recreate the database and initialize tables
+        from app import create_app
+        from app.models import create_tables
+        
+        app = create_app()
+        with app.app_context():
+            create_tables()
+        
+        flash('Database initialized successfully with empty tables', 'success')
+    except Exception as e:
+        flash(f'Error initializing database: {str(e)}', 'error')
+    
+    return redirect(url_for('db_manage.index')) 

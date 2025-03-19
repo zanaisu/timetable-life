@@ -85,6 +85,12 @@
         .button-warning:hover {
             background-color: #ec971f;
         }
+        .button-info {
+            background-color: #5bc0de;
+        }
+        .button-info:hover {
+            background-color: #31b0d5;
+        }
         .form-group {
             margin-bottom: 15px;
         }
@@ -133,9 +139,12 @@
             margin: 15% auto;
             padding: 20px;
             border-radius: 8px;
-            width: 400px;
+            width: 80%;
+            max-width: 800px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             text-align: center;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .close {
             color: #aaa;
@@ -152,6 +161,120 @@
             display: flex;
             justify-content: center;
             gap: 10px;
+        }
+        #tableStructure {
+            text-align: left;
+        }
+        .table-list {
+            list-style-type: none;
+            padding: 0;
+            text-align: left;
+        }
+        .table-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .table-item:hover {
+            background-color: #f5f5f5;
+        }
+        .column-list {
+            margin-left: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .cached-db-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .db-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .db-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-color: #4a6da7;
+        }
+        .db-card.selected {
+            background-color: #e6f0ff;
+            border-color: #4a6da7;
+        }
+        .db-name {
+            font-weight: bold;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 5px;
+        }
+        .db-info {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        .db-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 5px;
+            justify-content: space-between;
+        }
+        .db-contextmenu {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            padding: 5px 0;
+            z-index: 10;
+            display: none;
+        }
+        .db-contextmenu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .db-contextmenu li {
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .db-contextmenu li:hover {
+            background-color: #f5f5f5;
+        }
+        .table-view-modal .pagination {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        .page-button {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background-color: #f5f5f5;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .page-button.current {
+            background-color: #4a6da7;
+            color: white;
+            border-color: #4a6da7;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: #4a6da7;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -188,9 +311,16 @@
                         <button type="submit" class="button button-success">Cache Current Database</button>
                     </form>
                     <button id="importCurriculumBtn" class="button button-warning">Import Curriculum Data</button>
+                    <button id="inspectDbBtn" class="button button-info">View Database Structure</button>
+                </div>
+                <div class="flex-row" style="margin-top: 10px;">
+                    <button id="initializeDbBtn" class="button button-danger">Initialize New Database</button>
                 </div>
             {% else %}
                 <p>No database information available.</p>
+                <div class="flex-row" style="margin-top: 15px;">
+                    <button id="initializeDbBtn" class="button button-warning">Initialize New Database</button>
+                </div>
             {% endif %}
         </div>
         
@@ -213,37 +343,47 @@
         <!-- Cached Databases -->
         <div class="card">
             <h2>Cached Databases</h2>
-            {% if cached_dbs %}
+            <div>
+                <label for="viewMode">View Mode:</label>
+                <select id="viewMode" class="form-control">
+                    <option value="grid">Grid View</option>
+                    <option value="list">List View</option>
+                </select>
+            </div>
+            
+            <!-- Grid View (default) -->
+            <div id="gridView" class="cached-db-grid">
+                <!-- Database cards will be inserted here by JavaScript -->
+                <div class="loading-databases">Loading cached databases...</div>
+            </div>
+            
+            <!-- List View (alternative) -->
+            <div id="listView" style="display: none;">
                 <table>
                     <thead>
                         <tr>
                             <th>Filename</th>
                             <th>Size</th>
+                            <th>Created</th>
                             <th>Modified</th>
+                            <th>Tables</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for db in cached_dbs %}
-                            <tr>
-                                <td>{{ db.name }}</td>
-                                <td>{{ db.size }}</td>
-                                <td>{{ db.modified }}</td>
-                                <td class="actions">
-                                    <form action="{{ url_for('db_manage.apply_db', filename=db.name) }}" method="post" class="apply-form">
-                                        <button type="submit" class="button button-small button-success">Apply</button>
-                                    </form>
-                                    <form action="{{ url_for('db_manage.delete_cached', filename=db.name) }}" method="post" class="apply-form">
-                                        <button type="submit" class="button button-small button-danger">Delete</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        {% endfor %}
+                    <tbody id="dbListBody">
+                        <!-- Database list items will be inserted here by JavaScript -->
                     </tbody>
                 </table>
-            {% else %}
-                <p>No cached database files available.</p>
-            {% endif %}
+            </div>
+            
+            <div class="db-contextmenu" id="dbContextMenu">
+                <ul>
+                    <li data-action="apply">Apply Database</li>
+                    <li data-action="inspect">View Structure</li>
+                    <li data-action="download">Download</li>
+                    <li data-action="delete">Delete</li>
+                </ul>
+            </div>
         </div>
         
         <!-- Apply and Restart -->
@@ -271,12 +411,382 @@
         </div>
     </div>
     
+    <!-- Initialize Database Confirmation Modal -->
+    <div id="initializeDbModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Initialize New Database</h2>
+            <p>Are you sure you want to initialize a new database?</p>
+            <p><strong>Warning:</strong> This will remove all data from the current database.</p>
+            <p>A backup of the current database will be saved to the cache directory.</p>
+            <div class="modal-buttons">
+                <button id="cancelInitialize" class="button button-danger">Cancel</button>
+                <form action="{{ url_for('db_manage.initialize_db') }}" method="post">
+                    <button type="submit" class="button button-warning">Initialize</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Database Structure Modal -->
+    <div id="dbStructureModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Database Structure</h2>
+            <p>Tables and columns in the database:</p>
+            <div id="tableStructure">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Table View Modal -->
+    <div id="tableViewModal" class="modal table-view-modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="tableViewTitle">Table Data</h2>
+            <div id="tableData">
+                <div class="loading">Loading...</div>
+            </div>
+            <div id="tablePagination" class="pagination"></div>
+        </div>
+    </div>
+    
     <script>
-        // Modal handling
+        // Modal handling for curriculum import
         const importCurriculumBtn = document.getElementById('importCurriculumBtn');
         const importCurriculumModal = document.getElementById('importCurriculumModal');
-        const closeBtn = document.querySelector('.close');
+        const inspectDbBtn = document.getElementById('inspectDbBtn');
+        const dbStructureModal = document.getElementById('dbStructureModal');
+        const tableViewModal = document.getElementById('tableViewModal');
+        const initializeDbBtn = document.getElementById('initializeDbBtn');
+        const initializeDbModal = document.getElementById('initializeDbModal');
+        const closeButtons = document.querySelectorAll('.close');
         const cancelImportBtn = document.getElementById('cancelImport');
+        const cancelInitializeBtn = document.getElementById('cancelInitialize');
+        const viewModeSelector = document.getElementById('viewMode');
+        const gridView = document.getElementById('gridView');
+        const listView = document.getElementById('listView');
+        const dbContextMenu = document.getElementById('dbContextMenu');
+        
+        // Database structure display
+        if (inspectDbBtn) {
+            inspectDbBtn.addEventListener('click', async function() {
+                dbStructureModal.style.display = 'block';
+                const tableStructure = document.getElementById('tableStructure');
+                tableStructure.innerHTML = '<div class="loading"></div>';
+                
+                try {
+                    const response = await fetch('{{ url_for("db_manage.inspect_db") }}');
+                    const data = await response.json();
+                    
+                    let html = '<ul class="table-list">';
+                    for (const [tableName, tableInfo] of Object.entries(data)) {
+                        html += `
+                            <li class="table-item" data-table="${tableName}">
+                                <strong>${tableName}</strong> (${tableInfo.row_count} rows)
+                                <span style="float:right">
+                                    <button class="button button-small button-info view-table" 
+                                            data-table="${tableName}">View Data</button>
+                                </span>
+                                <ul class="column-list">`;
+                        
+                        tableInfo.columns.forEach(column => {
+                            html += `<li>${column.name} (${column.type})</li>`;
+                        });
+                        
+                        html += `</ul>
+                            </li>`;
+                    }
+                    html += '</ul>';
+                    
+                    tableStructure.innerHTML = html;
+                    
+                    // Add event listeners for view data buttons
+                    document.querySelectorAll('.view-table').forEach(button => {
+                        button.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const tableName = this.getAttribute('data-table');
+                            viewTableData(tableName);
+                        });
+                    });
+                } catch (error) {
+                    tableStructure.innerHTML = `<p class="alert alert-error">Error loading database structure: ${error.message}</p>`;
+                }
+            });
+        }
+        
+        // Function to view table data
+        async function viewTableData(tableName, page = 1) {
+            tableViewModal.style.display = 'block';
+            const tableData = document.getElementById('tableData');
+            const tablePagination = document.getElementById('tablePagination');
+            const tableViewTitle = document.getElementById('tableViewTitle');
+            
+            tableViewTitle.textContent = `Table: ${tableName}`;
+            tableData.innerHTML = '<div class="loading"></div>';
+            
+            try {
+                const response = await fetch(`{{ url_for("db_manage.view_table", table_name="TABLE_NAME") }}`.replace('TABLE_NAME', tableName) + `?page=${page}`);
+                const data = await response.json();
+                
+                // Create table
+                let html = '<table><thead><tr>';
+                data.columns.forEach(column => {
+                    html += `<th>${column}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                
+                // Table rows
+                data.rows.forEach(row => {
+                    html += '<tr>';
+                    data.columns.forEach(column => {
+                        html += `<td>${row[column] !== null ? row[column] : '<em>null</em>'}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                
+                // Pagination
+                let paginationHtml = '';
+                const pagination = data.pagination;
+                
+                if (pagination.total_pages > 1) {
+                    // Previous button
+                    if (pagination.page > 1) {
+                        paginationHtml += `<span class="page-button" data-page="${pagination.page - 1}">&laquo; Prev</span>`;
+                    }
+                    
+                    // Page numbers
+                    const startPage = Math.max(1, pagination.page - 2);
+                    const endPage = Math.min(pagination.total_pages, pagination.page + 2);
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                        const className = i === pagination.page ? 'page-button current' : 'page-button';
+                        paginationHtml += `<span class="${className}" data-page="${i}">${i}</span>`;
+                    }
+                    
+                    // Next button
+                    if (pagination.page < pagination.total_pages) {
+                        paginationHtml += `<span class="page-button" data-page="${pagination.page + 1}">Next &raquo;</span>`;
+                    }
+                }
+                
+                tableData.innerHTML = html;
+                tablePagination.innerHTML = paginationHtml;
+                
+                // Add pagination event listeners
+                document.querySelectorAll('#tablePagination .page-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const newPage = this.getAttribute('data-page');
+                        viewTableData(tableName, newPage);
+                    });
+                });
+                
+            } catch (error) {
+                tableData.innerHTML = `<p class="alert alert-error">Error loading table data: ${error.message}</p>`;
+            }
+        }
+        
+        // Load cached databases dynamically
+        async function loadCachedDatabases() {
+            try {
+                const response = await fetch('{{ url_for("db_manage.list_cached_dbs") }}');
+                const databases = await response.json();
+                
+                // Update grid view
+                let gridHtml = '';
+                
+                if (databases.length === 0) {
+                    gridHtml = '<p>No cached database files available.</p>';
+                } else {
+                    databases.forEach(db => {
+                        gridHtml += `
+                            <div class="db-card" data-filename="${db.name}">
+                                <div class="db-name">${db.name}</div>
+                                <div class="db-info"><strong>Size:</strong> ${db.size_formatted}</div>
+                                <div class="db-info"><strong>Tables:</strong> ${db.table_count}</div>
+                                <div class="db-info"><strong>Created:</strong> ${db.created_formatted}</div>
+                                <div class="db-info"><strong>Modified:</strong> ${db.modified_formatted}</div>
+                                <div class="db-actions">
+                                    <button class="button button-small button-success apply-db" 
+                                            data-filename="${db.name}">Apply</button>
+                                    <button class="button button-small button-danger delete-db" 
+                                            data-filename="${db.name}">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Update list view
+                let listHtml = '';
+                
+                if (databases.length === 0) {
+                    listHtml = '<tr><td colspan="6">No cached database files available.</td></tr>';
+                } else {
+                    databases.forEach(db => {
+                        listHtml += `
+                            <tr data-filename="${db.name}">
+                                <td>${db.name}</td>
+                                <td>${db.size_formatted}</td>
+                                <td>${db.created_formatted}</td>
+                                <td>${db.modified_formatted}</td>
+                                <td>${db.table_count}</td>
+                                <td class="actions">
+                                    <button class="button button-small button-success apply-db" 
+                                            data-filename="${db.name}">Apply</button>
+                                    <button class="button button-small button-info inspect-db" 
+                                            data-filename="${db.name}">Inspect</button>
+                                    <button class="button button-small button-danger delete-db" 
+                                            data-filename="${db.name}">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+                
+                gridView.innerHTML = gridHtml;
+                document.getElementById('dbListBody').innerHTML = listHtml;
+                
+                // Add event listeners
+                setupDatabaseCardEvents();
+                
+            } catch (error) {
+                console.error('Error loading cached databases:', error);
+                gridView.innerHTML = `<p class="alert alert-error">Error loading cached databases: ${error.message}</p>`;
+                document.getElementById('dbListBody').innerHTML = `<tr><td colspan="6" class="alert alert-error">Error loading cached databases: ${error.message}</td></tr>`;
+            }
+        }
+        
+        // Set up database card events
+        function setupDatabaseCardEvents() {
+            // Apply button click
+            document.querySelectorAll('.apply-db').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const filename = this.getAttribute('data-filename');
+                    applyDatabase(filename);
+                });
+            });
+            
+            // Delete button click
+            document.querySelectorAll('.delete-db').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const filename = this.getAttribute('data-filename');
+                    deleteDatabase(filename);
+                });
+            });
+            
+            // Inspect button click
+            document.querySelectorAll('.inspect-db').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    // TODO: Implement inspect cached database
+                    alert('Inspect functionality coming soon');
+                });
+            });
+            
+            // Context menu for grid view
+            document.querySelectorAll('.db-card').forEach(card => {
+                card.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    showContextMenu(e, this.getAttribute('data-filename'));
+                });
+                
+                card.addEventListener('click', function() {
+                    // Toggle selection
+                    document.querySelectorAll('.db-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+            
+            // Context menu for list view
+            document.querySelectorAll('#dbListBody tr').forEach(row => {
+                row.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    showContextMenu(e, this.getAttribute('data-filename'));
+                });
+            });
+        }
+        
+        // Show context menu
+        function showContextMenu(e, filename) {
+            const menu = document.getElementById('dbContextMenu');
+            menu.style.display = 'block';
+            menu.style.left = `${e.pageX}px`;
+            menu.style.top = `${e.pageY}px`;
+            
+            // Store the filename
+            menu.setAttribute('data-filename', filename);
+            
+            // Close menu when clicking elsewhere
+            document.addEventListener('click', closeContextMenu);
+        }
+        
+        // Close context menu
+        function closeContextMenu() {
+            document.getElementById('dbContextMenu').style.display = 'none';
+            document.removeEventListener('click', closeContextMenu);
+        }
+        
+        // Handle context menu actions
+        document.querySelectorAll('#dbContextMenu li').forEach(item => {
+            item.addEventListener('click', function() {
+                const action = this.getAttribute('data-action');
+                const filename = document.getElementById('dbContextMenu').getAttribute('data-filename');
+                
+                switch(action) {
+                    case 'apply':
+                        applyDatabase(filename);
+                        break;
+                    case 'inspect':
+                        // TODO: Implement inspect
+                        alert('Inspect functionality coming soon');
+                        break;
+                    case 'download':
+                        window.location.href = `{{ url_for('db_manage.export_db') }}`;
+                        break;
+                    case 'delete':
+                        deleteDatabase(filename);
+                        break;
+                }
+                
+                closeContextMenu();
+            });
+        });
+        
+        // Apply database
+        function applyDatabase(filename) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `{{ url_for('db_manage.apply_db', filename='FILENAME') }}`.replace('FILENAME', filename);
+            document.body.appendChild(form);
+            form.submit();
+        }
+        
+        // Delete database
+        function deleteDatabase(filename) {
+            if (confirm(`Are you sure you want to delete "${filename}"?`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `{{ url_for('db_manage.delete_cached', filename='FILENAME') }}`.replace('FILENAME', filename);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        // Toggle view mode
+        viewModeSelector.addEventListener('change', function() {
+            if (this.value === 'grid') {
+                gridView.style.display = 'grid';
+                listView.style.display = 'none';
+            } else {
+                gridView.style.display = 'none';
+                listView.style.display = 'block';
+            }
+        });
         
         // Open modal when button is clicked
         if (importCurriculumBtn) {
@@ -285,12 +795,19 @@
             });
         }
         
-        // Close modal on X click
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                importCurriculumModal.style.display = 'none';
+        // Open initialize database modal when button is clicked
+        if (initializeDbBtn) {
+            initializeDbBtn.addEventListener('click', function() {
+                initializeDbModal.style.display = 'block';
             });
         }
+        
+        // Close modals on X click
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.modal').style.display = 'none';
+            });
+        });
         
         // Close modal on Cancel click
         if (cancelImportBtn) {
@@ -299,11 +816,23 @@
             });
         }
         
+        // Close initialize modal on Cancel click
+        if (cancelInitializeBtn) {
+            cancelInitializeBtn.addEventListener('click', function() {
+                initializeDbModal.style.display = 'none';
+            });
+        }
+        
         // Close modal when clicking outside
         window.addEventListener('click', function(event) {
-            if (event.target == importCurriculumModal) {
-                importCurriculumModal.style.display = 'none';
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
             }
+        });
+        
+        // Load cached databases when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCachedDatabases();
         });
     </script>
 </body>
