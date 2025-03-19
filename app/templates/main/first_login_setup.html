@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Setup | Timetable{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+    <h1 class="page-title">Welcome to Timetable!</h1>
+    <p class="mb-3">Let's set up your study preferences to get started.</p>
+    
+    <form method="POST" action="{{ url_for('main.first_login_setup') }}">
+        <h2 class="mb-2">Study Preferences</h2>
+        
+        <div class="form-group">
+            <label for="study_hours" class="form-label">Study Hours Per Day (Weekdays)</label>
+            <input type="number" id="study_hours" name="study_hours" class="form-control" value="2" min="0.5" max="12" step="0.5" required>
+            <small class="text-secondary">Number of hours you plan to study on weekdays</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="weekend_hours" class="form-label">Study Hours Per Day (Weekends)</label>
+            <input type="number" id="weekend_hours" name="weekend_hours" class="form-control" value="3" min="0" max="12" step="0.5" required>
+            <small class="text-secondary">Number of hours you plan to study on weekends</small>
+        </div>
+        
+        <h2 class="mt-3 mb-2">Subjects</h2>
+        <p class="mb-2 text-secondary">Select which subjects you're studying</p>
+        
+        <div class="grid col-2">
+            {% for subject in subjects %}
+                <div class="form-group">
+                    <label class="d-flex items-center gap-1">
+                        <input type="checkbox" name="subject_{{ subject.id }}" checked>
+                        <span>{{ subject.title }}</span>
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <h2 class="mt-3 mb-2">Task Types</h2>
+        <p class="mb-2 text-secondary">Select which task types you want to include in your daily tasks</p>
+        
+        <div class="grid col-2">
+            {% for task_type in task_types %}
+                <div class="form-group">
+                    <label class="d-flex items-center gap-1">
+                        <input type="checkbox" name="task_type_{{ task_type.id }}" checked>
+                        <span>{{ task_type.name|capitalize }}</span>
+                    </label>
+                    <small class="text-secondary">{{ task_type.description }}</small>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Complete Setup</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+# Database files
+instance/app.db
+
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Flask stuff
+.env
+.flaskenv
+.env.*
+
+# Other
+.DS_Store
+tempCodeRunnerFile.py
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/

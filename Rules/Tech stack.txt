@@ -1,0 +1,7 @@
+# Technical stack
+
+- Python for the backend
+- ﻿﻿html/js for the frontend
+﻿﻿- SQL databases (postgreSQL will be used for railway), never JSON file storage
+﻿﻿- Separate databases for dev, test, and prod
+﻿﻿﻿﻿- Python tests

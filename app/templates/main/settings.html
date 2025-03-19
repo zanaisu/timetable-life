@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Settings | Timetable{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Settings</h1>
+
+{% if payment_message %}
+<div class="alert alert-success mb-3">
+    {{ payment_message }}
+</div>
+{% endif %}
+
+<div class="glass-card mb-3">
+    <form method="POST" action="{{ url_for('main.settings') }}">
+        <h2 class="mb-2">Study Preferences</h2>
+        
+        <div class="form-group">
+            <label for="study_hours" class="form-label">Study Hours Per Day (Weekdays)</label>
+            <input type="number" id="study_hours" name="study_hours" class="form-control" value="{{ current_user.study_hours_per_day }}" min="0.5" max="12" step="0.5">
+            <small class="text-secondary">Number of hours you plan to study on weekdays</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="weekend_hours" class="form-label">Study Hours Per Day (Weekends)</label>
+            <input type="number" id="weekend_hours" name="weekend_hours" class="form-control" value="{{ current_user.weekend_hours }}" min="0" max="12" step="0.5">
+            <small class="text-secondary">Number of hours you plan to study on weekends</small>
+        </div>
+        
+        <h2 class="mt-3 mb-2">Task Types</h2>
+        <p class="mb-2 text-secondary">Select which task types you want to include in your daily tasks</p>
+        
+        <div class="grid col-2">
+            {% for task_type in task_types %}
+                <div class="form-group">
+                    <label class="d-flex items-center gap-1">
+                        <input type="checkbox" name="task_type_{{ task_type.id }}" {% if global_preferences[task_type.id] %}checked{% endif %}>
+                        <span>{{ task_type.name|capitalize }}</span>
+                    </label>
+                    <small class="text-secondary">{{ task_type.description }}</small>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <h2 class="mt-3 mb-2">Subject-Specific Settings</h2>
+        <p class="mb-2 text-secondary">Configure settings for specific subjects</p>
+        
+        {% for subject in subjects %}
+            <div class="form-group">
+                <h3>{{ subject.title }}</h3>
+                <div class="d-flex gap-2 flex-wrap">
+                    <label class="d-flex items-center gap-1">
+                        <input 
+                            type="checkbox" 
+                            name="uplearn_subject_{{ subject.id }}" 
+                            {% if subject.id in subject_preferences and subject_preferences[subject.id][task_types|selectattr('name', 'equalto', 'uplearn')|map(attribute='id')|first] %}checked{% endif %}>
+                        <span>Uplearn Only</span>
+                    </label>
+                    <small class="text-secondary">When enabled, only Uplearn tasks will be generated for this subject</small>
+                </div>
+            </div>
+        {% endfor %}
+        
+        <h2 class="mt-3 mb-2">UI Preferences</h2>
+        
+        <div class="form-group">
+            <label class="d-flex items-center gap-1">
+                <input type="checkbox" name="dark_mode" {% if current_user.dark_mode %}checked{% endif %}>
+                <span>Dark Mode</span>
+            </label>
+            <small class="text-secondary">Enable dark mode for the application</small>
+        </div>
+        
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+        </div>
+    </form>
+</div>
+
+<div class="mt-4 d-flex justify-content-center align-items-center">
+    <p class="text-secondary me-3">Made with love and kindness - Tom Oakley </p>
+    <span class="mx-2"></span>
+    <button id="stripe-pay-btn" style="background: none; border: none; color: orange; cursor: pointer; padding: 0; font-size: inherit; font-weight: normal; font-family: inherit;"> Pay Me</button>
+</div>
+
+<!-- Modal overlay -->
+<div id="payment-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 9999;">
+    <!-- Modal container -->
+    <div id="payment-container" class="glass-card" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; padding: 20px; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+        <!-- Close button -->
+        <button id="close-modal" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+        
+        <!-- Modal content -->
+        <h3 style="margin-top: 10px; margin-bottom: 15px; font-size: 20px;">Support This Project</h3>
+        <p style="margin-bottom: 15px;">Choose an amount to donate:</p>
+        
+        <!-- Donation buttons -->
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button class="donation-btn btn btn-outline-primary" data-amount="100">£1</button>
+            <button class="donation-btn btn btn-outline-primary" data-amount="300">£3</button>
+            <button class="donation-btn btn btn-outline-primary" data-amount="500">£5</button>
+            <button class="donation-btn btn btn-outline-primary" data-amount="1000">£10</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stripe = Stripe('pk_live_51R3moLE9EdG31WVjH1SaChu6yr1uKjUCQMWYpiMKLJJ9TZFhJt122LQyAQ7hllPV6vaATwSYWzYeEsRem6PHOydM00qv6OOpi7');
+        const payButton = document.getElementById('stripe-pay-btn');
+        const overlay = document.getElementById('payment-overlay');
+        const closeButton = document.getElementById('close-modal');
+        const donationButtons = document.querySelectorAll('.donation-btn');
+        
+        // Open modal when Pay Me button is clicked
+        payButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            overlay.style.display = 'block';
+            console.log('Modal opened');
+        });
+        
+        // Close modal when X is clicked
+        closeButton.addEventListener('click', function() {
+            overlay.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside
+        overlay.addEventListener('click', function(event) {
+            if (event.target === overlay) {
+                overlay.style.display = 'none';
+            }
+        });
+        
+        // Prevent clicks inside the modal from closing it
+        document.getElementById('payment-container').addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+        
+        // Handle donation button clicks
+        donationButtons.forEach(button => {
+            button.addEventListener('click', async function() {
+                const amount = this.getAttribute('data-amount');
+                console.log('Donation button clicked:', amount);
+                
+                try {
+                    // Create a checkout session on the server
+                    const response = await fetch('/create-checkout-session', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ amount: amount })
+                    });
+                    
+                    const session = await response.json();
+                    console.log('Session created:', session.id);
+                    
+                    // Redirect to Stripe Checkout
+                    stripe.redirectToCheckout({
+                        sessionId: session.id
+                    });
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Something went wrong. Please try again later.');
+                }
+            });
+        });
+    });
+</script>
+
+<style>
+    .modal {
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        position: relative;
+        padding: 20px;
+        width: 90%;
+        max-width: 500px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        color: #333;
+        z-index: 1001;
+    }
+    
+    .close {
+        position: absolute;
+        right: 15px;
+        top: 10px;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    body.dark-mode .modal-content {
+        background-color: #2a2a2a;
+        color: white;
+    }
+    
+    .donation-btn {
+        min-width: 60px;
+    }
+</style>
+{% endblock %}

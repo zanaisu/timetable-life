@@ -1,0 +1,62 @@
+/* Reset and Typography styles */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  transition: background-color 0.3s, color 0.3s;
+  min-height: 100vh;
+  background-image: 
+    radial-gradient(circle at 40% 20%, rgba(255, 140, 41, 0.12) 0px, transparent 800px), 
+    radial-gradient(circle at 80% 10%, rgba(255, 173, 99, 0.08) 0px, transparent 800px), 
+    radial-gradient(circle at 10% 60%, rgba(255, 140, 41, 0.07) 0px, transparent 700px),
+    radial-gradient(circle at 70% 70%, rgba(255, 140, 41, 0.06) 0px, transparent 600px);
+  background-size: 100% 100%;
+  background-attachment: fixed;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+main.container {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+[data-theme="dark"] body {
+  background-image: 
+    radial-gradient(circle at 40% 20%, rgba(255, 140, 41, 0.15) 0px, transparent 800px),
+    radial-gradient(circle at 80% 0%, rgba(255, 173, 99, 0.12) 0px, transparent 800px),
+    radial-gradient(circle at 15% 70%, rgba(255, 140, 41, 0.1) 0px, transparent 700px),
+    radial-gradient(circle at 60% 80%, rgba(255, 173, 99, 0.08) 0px, transparent 600px);
+  background-size: 100% 100%;
+  background-attachment: fixed;
+} 

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Curriculum Browser | Timetable{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/curriculum.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="page-title">Curriculum Browser</h1>
+  
+  <!-- Search bar -->
+  <div class="glass-card curriculum-search-container mb-3">
+    <input type="text" id="curriculum-search" placeholder="Search subjects, topics or subtopics...">
+  </div>
+  
+  <!-- Three-panel layout -->
+  <div class="curriculum-container">
+    <!-- Subjects panel -->
+    <div class="glass-card subjects-panel">
+      <h2 class="panel-title">Subjects</h2>
+      <ul class="subject-list" id="subject-list">
+        <!-- Will be populated by JavaScript -->
+        <li class="empty-state">Loading subjects...</li>
+      </ul>
+    </div>
+    
+    <!-- Topics panel -->
+    <div class="glass-card topics-panel">
+      <h2 class="panel-title">Topics</h2>
+      <div class="topics-container" id="topics-container">
+        <p class="empty-state">Select a subject to view topics</p>
+      </div>
+    </div>
+    
+    <!-- Subtopics panel -->
+    <div class="glass-card subtopics-panel">
+      <h2 class="panel-title">Subtopics</h2>
+      <div class="subtopics-container" id="subtopics-container">
+        <p class="empty-state">Select a topic to view subtopics</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/curriculum.js') }}"></script>
+{% endblock %}

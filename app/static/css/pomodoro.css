@@ -1,0 +1,332 @@
+/* Pomodoro Timer Styles */
+body.pomodoro-page {
+    min-height: 100vh;
+}
+
+html, body {
+    overflow-x: hidden;
+}
+
+.pomodoro-container {
+    background: rgba(var(--accent-color-rgb), 0.25);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: visible;
+}
+
+.pomodoro-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.pomodoro-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.pomodoro-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.pomodoro-title i {
+    color: var(--accent-color);
+}
+
+.timer-display-container {
+    position: relative;
+    width: 100%;
+    margin: 30px auto 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.timer-display {
+    font-size: 3rem;
+    font-weight: 700;
+    text-align: center;
+    font-family: 'Roboto Mono', monospace;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+    z-index: 2;
+}
+
+.timer-display.running {
+    color: var(--success-color);
+}
+
+.timer-display.paused {
+    color: var(--warning-color);
+}
+
+.timer-display.break {
+    color: var(--info-color);
+}
+
+.timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.timer-btn {
+    padding: 10px 20px;
+    border-radius: 50px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.timer-btn:hover {
+    background: var(--button-hover-bg);
+    transform: translateY(-2px);
+}
+
+.timer-btn i {
+    font-size: 1rem;
+}
+
+.timer-btn.start-btn {
+    background: var(--success-color);
+}
+
+.timer-btn.pause-btn {
+    background: var(--warning-color);
+}
+
+.timer-btn.reset-btn {
+    background: var(--danger-color);
+}
+
+.timer-settings {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.time-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.time-input-group label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.time-input {
+    width: 100px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    text-align: center;
+}
+
+.time-display-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.time-display-group label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.time-display {
+    width: 100px;
+    padding: 8px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-color);
+    text-align: center;
+    font-weight: 500;
+}
+
+.task-integration {
+    margin-top: 20px;
+}
+
+.task-integration-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.task-integration-title {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.task-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.task-select {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    appearance: none;
+    cursor: pointer;
+}
+
+.task-select-container::after {
+    content: '\f078';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.pomodoro-progress {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    margin: 20px auto;
+    max-width: 300px;
+}
+
+.progress-bar-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%; /* Start at 0% width */
+    background-color: var(--accent-color);
+    transition: width 0.5s ease;
+}
+
+.progress-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.session-counter {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.session-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.session-dot.completed {
+    background: var(--accent-color);
+}
+
+/* Notification styles */
+.timer-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.timer-notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.timer-notification-title {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.timer-notification-message {
+    font-size: 0.9rem;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.timer-display.running {
+    animation: pulse 2s infinite;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+    .timer-settings {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .time-input-group, .time-display-group {
+        width: 100%;
+    }
+    
+    .time-input, .time-display {
+        width: 100%;
+    }
+}

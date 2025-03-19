@@ -1,0 +1,300 @@
+/* Task and Subtopics Components */
+
+.task-container {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Add responsive grid breakpoints */
+@media (max-width: 768px) {
+  .task-container {
+    grid-template-columns: 1fr; /* Single column on mobile */
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+  .task-container {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (min-width: 1201px) {
+  .task-container {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+.task-card {
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 20px;
+  transition: all 0.3s ease;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 30px var(--shadow-color);
+  height: 100%; /* Make all cards the same height */
+  display: flex;
+  flex-direction: column;
+  min-height: 200px; /* Minimum height for consistent look */
+}
+
+/* Ensure completed tasks also follow grid layout */
+.completed-tasks-section .task-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.task-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px var(--shadow-color);
+}
+
+.pomodoro-button {
+  background-color: var(--accent-color);
+  color: white;
+  width: 100%;
+}
+
+.pomodoro-button:hover {
+  background-color: var(--accent-light);
+  transform: translateY(-2px);
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.task-title {
+  font-weight: 600;
+  margin-bottom: 5px;
+  line-height: 1.2;
+}
+
+.task-badge {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: rgba(255, 149, 0, 0.15);
+  color: rgba(255, 149, 0, 0.9);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(4px);
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 149, 0, 0.2);
+}
+
+.task-content {
+  margin-bottom: 15px;
+  font-size: 0.95rem;
+  flex: 1; /* Make content take available space */
+}
+
+.task-description {
+  margin-bottom: 15px;
+  color: var(--text-secondary);
+}
+
+.task-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 15px;
+}
+
+.task-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto; /* Push to bottom of card */
+  padding-top: 15px;
+  gap: 10px;
+}
+
+.task-subtopics {
+  margin-top: 15px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subtopic-container {
+  padding: 10px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.subtopic-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.subtopic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.subtopic-title {
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin-right: 10px;
+}
+
+.subtopic-duration {
+  font-size: 0.8rem;
+  color: rgba(255, 149, 0, 0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: rgba(255, 149, 0, 0.1);
+}
+
+.subtopic-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 5px;
+}
+
+.confidence-indicator {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.confidence-1 { background-color: var(--confidence-1); }
+.confidence-2 { background-color: var(--confidence-2); }
+.confidence-3 { background-color: var(--confidence-3); }
+.confidence-4 { background-color: var(--confidence-4); }
+.confidence-5 { background-color: var(--confidence-5); }
+
+.confidence-selector {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.confidence-option {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.confidence-option:hover,
+.confidence-option.selected {
+  transform: scale(1.2);
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.confidence-option[data-value="1"] { background-color: var(--confidence-1); }
+.confidence-option[data-value="2"] { background-color: var(--confidence-2); }
+.confidence-option[data-value="3"] { background-color: var(--confidence-3); }
+.confidence-option[data-value="4"] { background-color: var(--confidence-4); }
+.confidence-option[data-value="5"] { background-color: var(--confidence-5); }
+
+/* Apply sans-serif font to buttons */
+.task-card button,
+.pomodoro-compact button,
+.task-actions button {
+  font-family: 'Arial', 'Helvetica', sans-serif;
+  font-weight: 500;
+}
+
+/* More specific styling for primary action buttons */
+.task-card .task-actions .btn.btn-primary.w-full {
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Header action buttons styling */
+.d-flex.justify-between.items-center.mb-3 .d-flex.gap-1 button.btn {
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+
+/* Specific styling for the regenerate tasks button */
+#refresh-tasks-btn {
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3);
+}
+
+#refresh-tasks-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 149, 0, 0.4);
+}
+
+/* Styling for task select dropdowns and pomodoro minutes */
+#task-select,
+.task-select-container select,
+#pomodoro-task-select,
+#pomodoro-minutes {
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: var(--text-primary);
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+/* Style dropdown options to match theme */
+#pomodoro-task-select option,
+#task-select option {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  padding: 8px;
+}
+
+#task-select:focus,
+.task-select-container select:focus,
+#pomodoro-task-select:focus,
+#pomodoro-minutes:focus {
+  border-color: rgba(255, 149, 0, 0.6);
+  box-shadow: 0 0 0 2px rgba(255, 149, 0, 0.2);
+  outline: none;
+}
+
+/* Improve padding in pomodoro glass card container */
+.pomodoro-page .glass-card {
+  padding: 28px 32px;
+}
+
+.pomodoro-page .glass-card.hover-lift.glass-noise {
+  padding: 28px 32px;
+  margin-bottom: 24px;
+}
+
+.pomodoro-page .glass-card > * {
+  margin-bottom: 18px;
+}
+
+.pomodoro-page .glass-card > *:last-child {
+  margin-bottom: 0;
+} 

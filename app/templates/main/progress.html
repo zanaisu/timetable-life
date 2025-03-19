@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Progress & Analytics | Timetable{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/progress.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Hidden data elements for JS to use -->
+<div hidden id="subject-data" data-subjects="{{ subject_stats|tojson|safe }}"></div>
+<div hidden id="chart-data" data-chart="{{ chart_data|tojson|safe }}"></div>
+
+<h1 class="page-title">Progress & Analytics</h1>
+
+<!-- Analytics Navigation Tabs -->
+<div class="analytics-tabs mb-3">
+    <button class="tab-button active" data-tab="overview">Overview</button>
+    <button class="tab-button" data-tab="subjects">Subject Analysis</button>
+    <button class="tab-button" data-tab="learning">Learning Insights</button>
+    <button class="tab-button" data-tab="efficiency">Study Efficiency</button>
+    <button class="tab-button" data-tab="recommendations">Recommendations</button>
+</div>
+
+<!-- Tab Content -->
+<div class="tab-content">
+    <!-- Overview Tab -->
+    <div class="tab-pane active" id="overview-tab">
+        <div class="grid col-2">
+            <div class="glass-card hover-lift">
+                <h2 class="mb-2">Overall Progress</h2>
+                
+                <div class="d-flex justify-between items-center mb-2">
+                    <div>
+                        <h3>{{ completed_tasks }} / {{ total_tasks }}</h3>
+                        <p class="text-secondary">Tasks Completed</p>
+                    </div>
+                    <div>
+                        <h3>{{ completion_percentage|round|int }}<span class="percent-symbol">%</span></h3>
+                        <p class="text-secondary">Completion Rate</p>
+                    </div>
+                </div>
+                
+                <div class="progress-bar main-progress-bar">
+                    <div id="progress-bar-fill" data-percentage="{{ completion_percentage }}"></div>
+                </div>
+            </div>
+            
+            <div class="glass-card hover-lift">
+                <h2 class="mb-2">Subject Breakdown</h2>
+                
+                <div>
+                    <canvas id="subjects-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid col-2 mt-3">
+            <div class="glass-card hover-lift">
+                <h2 class="mb-2">Confidence Distribution</h2>
+                <div>
+                    <canvas id="confidence-distribution-chart"></canvas>
+                </div>
+                <div class="mt-2 text-center">
+                    <p>Average Confidence: <strong>{{ analytics.overview.average_confidence }}</strong> / 5</p>
+                    <p class="text-secondary">Based on {{ analytics.overview.subtopics_tracked }} subtopics</p>
+                </div>
+            </div>
+            
+            <div class="glass-card hover-lift">
+                <h2 class="mb-2">Confidence Trend</h2>
+                <div>
+                    <canvas id="confidence-trend-chart"></canvas>
+                </div>
+                <div class="mt-2 text-center">
+                    <p>Learning Rate: <strong>{{ analytics.learning.rate.learning_rate_monthly }}</strong> points/month</p>
+                    <!-- Static placeholder - will be populated by JavaScript -->
+                    <p class="text-secondary" id="confidence-change-text" 
+                       data-change-dir="{{ 'increase' if analytics.learning.rate.confidence_change > 0 else 'decrease' }}"
+                       data-change-val="{{ analytics.learning.rate.confidence_change_percent|abs|round|int }}">
+                       Confidence trend loading...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Subject Analysis Tab -->
+    <div class="tab-pane" id="subjects-tab">
+        <div class="grid col-2">
+            <div class="glass-card hover-lift">
+                <h2 class="mb-2">Subject Performance</h2>
+                <div>
+                    <canvas id="subject-performance-chart"></canvas>
+                </div>
+            </div>
+            
+            <div class="glass-card hover-lift">
+                <h2 class="mb-2">Mastery Levels</h2>
+                <div class="subject-mastery-list">
+                    {% for subject in analytics.subjects %}
+                    <div class="subject-mastery-item">
+                        <div class="d-flex justify-between items-center">
+                            <h3>{{ subject.subject_title }}</h3>
+                            <span class="mastery-badge mastery-{{ subject.mastery_level|lower }}">{{ subject.mastery_level }}</span>
+                        </div>
+                        <div class="progress-bar mt-1">
+                            <div class="progress-bar-fill confidence-bar" data-confidence="{{ subject.average_confidence * 20 }}"></div>
+                        </div>
+                        <div class="d-flex justify-between text-secondary mt-1">
+                            <span>Confidence: {{ subject.average_confidence }}</span>
+                            <span>Coverage: {{ subject.coverage_percentage }}<span class="percent-symbol">%</span></span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Learning Insights Tab -->
+    <div class="tab-pane" id="learning-tab">
+        <div class="grid col-2">
+            <div class="glass-card hover-lift">
+                <h2 class="mb-2">Forgetting Curve</h2>
+                <div>
+                    <canvas id="forgetting-curve-chart"></canvas>
+                </div>
+                <div class="mt-2">
+                    <h3>Optimal Review Intervals</h3>
+                    <div class="d-flex justify-between mt-1">
+                        <div class="review-interval">
+                            <span class="interval-days">{{ analytics.learning.optimal_review_intervals.short_term }}</span>
+                            <span class="interval-label">Days</span>
+                            <span class="interval-name">Short Term</span>
+                        </div>
+                        <div class="review-interval">
+                            <span class="interval-days">{{ analytics.learning.optimal_review_intervals.medium_term }}</span>
+                            <span class="interval-label">Days</span>
+                            <span class="interval-name">Medium Term</span>
+                        </div>
+                        <div class="review-interval">
+                            <span class="interval-days">{{ analytics.learning.optimal_review_intervals.long_term }}</span>
+                            <span class="interval-label">Days</span>
+                            <span class="interval-name">Long Term</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-card hover-lift">
+                <h2 class="mb-2">Learning Rate</h2>
+                
+                <div class="learning-rate-visual">
+                    <div class="rate-value">{{ analytics.learning.rate.learning_rate_monthly }}</div>
+                    <div class="rate-label">points/month</div>
+                    
+                    <div class="comparison-block mt-3">
+                        <div class="period-comparison">
+                            <div class="period-block first-period">
+                                <span class="period-value">{{ analytics.learning.rate.first_period_average }}</span>
+                                <span class="period-label">First 45 Days</span>
+                            </div>
+                            <div class="arrow-indicator">
+                                <i class="fas {{ 'fa-arrow-up text-success' if analytics.learning.rate.confidence_change > 0 else 'fa-arrow-down text-error' }}"></i>
+                                <span class="change-value {{ 'text-success' if analytics.learning.rate.confidence_change > 0 else 'text-error' }}">
+                                    {{ analytics.learning.rate.confidence_change|abs }}
+                                </span>
+                            </div>
+                            <div class="period-block second-period">
+                                <span class="period-value">{{ analytics.learning.rate.second_period_average }}</span>
+                                <span class="period-label">Last 45 Days</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="rate-explanation mt-3">
+                        <!-- JavaScript will populate this element -->
+                        <p id="confidence-change-text"
+                           data-direction="{{ 'increased' if analytics.learning.rate.confidence_change > 0 else 'decreased' }}"
+                           data-value="{{ analytics.learning.rate.confidence_change_percent|abs|round|int }}">
+                            Loading confidence data...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Efficiency Tab -->
+    <div class="tab-pane" id="efficiency-tab">
+        <div class="grid col-2">
+            <div class="glass-card hover-lift">
+                <h2 class="mb-2">Study Efficiency</h2>
+                
+                <div class="efficiency-metrics">
+                    <div class="metric-row">
+                        <div class="metric-item">
+                            <div class="metric-value">{{ analytics.efficiency.completed_tasks }}</div>
+                            <div class="metric-label">Tasks Completed</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">{{ analytics.efficiency.completion_rate }}<span class="percent-symbol">%</span></div>
+                            <div class="metric-label">Completion Rate</div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-row mt-3">
+                        <div class="metric-item">
+                            <div class="metric-value">{{ analytics.efficiency.tasks_per_week }}</div>
+                            <div class="metric-label">Tasks Per Week</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">{{ analytics.efficiency.effectiveness_rate }}<span class="percent-symbol">%</span></div>
+                            <div class="metric-label">Effectiveness Rate</div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-explanation mt-3">
+                        <p>On average, your confidence increases by <strong>{{ analytics.efficiency.avg_confidence_gain }}</strong> points per completed task.</p>
+                        <p class="text-secondary">Effectiveness rate is the percentage of tasks that improved your confidence.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-card hover-lift">
+                <h2 class="mb-2">Study Patterns</h2>
+                
+                <div class="study-pattern-calendar">
+                    <!-- A simple heatmap-style visualization would go here -->
+                    <p class="text-center">Weekly study pattern visualization coming soon!</p>
+                    
+                    <div class="study-recommendations mt-3">
+                        <h3>Recommendations</h3>
+                        <ul class="mt-1">
+                            <li>Your most effective study time appears to be in the {{ 'morning' if analytics.efficiency.effectiveness_rate > 70 else 'evening' }}</li>
+                            <li>Try to focus on {{ analytics.subjects.0.subject_title if analytics.subjects else 'your weakest subject' }} to maximize improvement</li>
+                            <li>Maintain your current completion rate of <span data-rate="{{ analytics.efficiency.completion_rate }}">{{ analytics.efficiency.completion_rate }}</span><span class="percent-symbol">%</span> or higher</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recommendations Tab -->
+    <div class="tab-pane" id="recommendations-tab">
+        <div class="glass-card hover-lift">
+            <h2 class="mb-2">Priority Recommendations</h2>
+            
+            <div class="recommendations-list">
+                {% if analytics.recommendations %}
+                    {% for rec in analytics.recommendations %}
+                    <div class="recommendation-item">
+                        <div class="d-flex justify-between items-center">
+                            <div>
+                                <h3>{{ rec.subtopic }}</h3>
+                                <p class="text-secondary">{{ rec.topic }} ({{ rec.subject }})</p>
+                            </div>
+                            <div class="recommendation-metrics">
+                                <div class="confidence-indicator confidence-{{ rec.confidence_level }}"></div>
+                                {% if rec.priority %}
+                                <span class="priority-flag"><i class="fas fa-star"></i></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="recommendation-reason mt-1">
+                            {% if rec.days_since_last_review is none %}
+                            <p>Never reviewed</p>
+                            {% else %}
+                            <p>Last reviewed {{ rec.days_since_last_review }} days ago</p>
+                            {% endif %}
+                            
+                            {% if rec.recommended_review %}
+                            <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Review recommended</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center">No priority recommendations at this time</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card mt-3">
+    <h2 class="mb-2">Recent Activity</h2>
+    
+    {% if recent_tasks %}
+        <div class="grid">
+            {% for task in recent_tasks %}
+                <div class="glass-card task-card">
+                    <div class="task-header">
+                        <h3 class="task-title">{{ task.title }}</h3>
+                        <span class="task-badge">{{ task.task_type.name|capitalize }}</span>
+                    </div>
+                    
+                    <div class="task-content">
+                        <p class="task-description">{{ task.description | safe }}</p>
+                        
+                        <div class="task-meta">
+                            <span>
+                                <i class="fas fa-book"></i> {{ task.subject.title }}
+                            </span>
+                            <span>
+                                <i class="fas fa-clock"></i> {{ task.total_duration }} min
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="task-actions">
+                        {% if task.completed_at %}
+                            <button class="btn btn-success w-full" disabled>
+                                <i class="fas fa-check"></i> Completed
+                                <small class="text-small">{{ task.completed_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </button>
+                        {% elif task.skipped_at %}
+                            <button class="btn btn-secondary w-full" disabled>
+                                <i class="fas fa-forward"></i> Skipped
+                                <small class="text-small">{{ task.skipped_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </button>
+                        {% else %}
+                            <button class="btn btn-primary w-full" onclick="event.preventDefault(); completeTask('{{ task.id }}')">
+                                <i class="fas fa-check"></i> Complete
+                            </button>
+                            <button class="btn btn-secondary" onclick="event.preventDefault(); skipTask('{{ task.id }}')">
+                                <i class="fas fa-forward"></i> Skip
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center">No recent tasks</p>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/progress.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,36 @@
+/* Main CSS file for Timetable App
+   This file contains common styles used across the application */
+
+/* Any additional global styles can be added here */
+/* This file is intentionally minimal as most styles are in style.css */
+
+/* Ensure the file exists for service worker caching */
+
+/* Main CSS for Timetable App */
+
+/* Base */
+@import 'base/variables.css';
+@import 'base/reset.css';
+
+/* Layout */
+@import 'layout/grid.css';
+@import 'layout/navbar.css';
+@import 'layout/content.css';
+
+/* Components */
+@import 'components/glass-card.css';
+@import 'components/forms.css';
+@import 'components/flash.css';
+@import 'components/timer.css';
+@import 'components/tasks.css';
+@import 'components/curriculum.css';
+
+/* Utilities */
+@import 'utilities/helpers.css';
+
+/* Keep other CSS files for specialized pages */
+/* These are included directly in their respective templates */
+/* - pomodoro.css */
+/* - curriculum.css */
+/* - progress.css */
+/* - animations.css */ 

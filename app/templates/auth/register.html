@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Register | Timetable{% endblock %}
+
+{% block content %}
+<div class="grid col-1">
+    <div class="glass-card">
+        <h1 class="page-title">Create an Account</h1>
+        
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            <div class="form-group">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" name="username" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email" class="form-label">Email (Optional)</label>
+                <input type="email" id="email" name="email" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password_confirm" class="form-label">Confirm Password</label>
+                <input type="password" id="password_confirm" name="password_confirm" class="form-control" required>
+            </div>
+            
+            <div class="d-flex justify-between items-center mt-2">
+                <button type="submit" class="btn btn-primary">Register</button>
+                <a href="{{ url_for('auth.login') }}" class="text-accent">Already have an account? Login</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

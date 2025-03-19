@@ -1,0 +1,743 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Timetable{% endblock %}
+
+{% block styles %}
+<style>
+    .pomodoro-compact {
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: var(--accent-color);
+        border: 1px solid rgba(255, 149, 0, 0.5);
+        position: relative;
+    }
+    
+    .pomodoro-compact h2 {
+        color: white;
+    }
+    
+    .pomodoro-compact p {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .pomodoro-compact select {
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .pomodoro-content {
+        transition: max-height 0.3s ease, opacity 0.3s ease;
+    }
+    
+    .pomodoro-content.hidden {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        margin: 0;
+        padding: 0;
+    }
+    
+    @media (min-width: 768px) {
+        .pomodoro-compact {
+            max-width: calc(100% - 2rem);
+            border-radius: 10px;
+        }
+    }
+    
+    @media (min-width: 992px) {
+        .pomodoro-compact {
+            max-width: calc(100% - 4rem);
+        }
+    }
+    
+    /* Add custom styles for the multi-step modal */
+    .step-navigation {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+    }
+    
+    .step-navigation::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: #e0e0e0;
+        z-index: 1;
+    }
+    
+    .step {
+        position: relative;
+        background-color: var(--bg-color);
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        z-index: 2;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .step.active {
+        background-color: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+    
+    .step.completed {
+        background-color: var(--success-color);
+        color: white;
+        border-color: var(--success-color);
+    }
+    
+    .step-content {
+        display: none;
+        padding: 15px 0;
+    }
+    
+    .step-content.active {
+        display: block;
+    }
+    
+    /* Add spacing to subtopic checkboxes */
+    #subtopic-checkboxes .form-check {
+        margin-bottom: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-between items-center mb-3">
+    <h1 class="page-title">Today's Tasks</h1>
+    <div class="d-flex gap-1">
+        <button class="btn btn-secondary" data-href="{{ url_for('main.index') }}">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+        <button class="btn btn-primary" id="refresh-tasks-btn">
+            <i class="fas fa-redo"></i> Regenerate Tasks
+        </button>
+        <button class="btn btn-secondary" id="add-bonus-task-btn">
+            <i class="fas fa-plus"></i> Add Task
+        </button>
+    </div>
+</div>
+
+<div class="mb-3">
+    <p class="text-secondary">{{ current_date.strftime('%A, %B %d, %Y') }}</p>
+</div>
+
+{% if not active_tasks and not completed_tasks %}
+    <div class="glass-card text-center">
+        <p class="mb-2">No tasks available for today.</p>
+        <button class="btn btn-primary" id="generate-tasks-btn">Generate Tasks</button>
+    </div>
+{% else %}
+    <div class="active-tasks-section">
+        <h2 class="section-title">Active Tasks</h2>
+        <div class="task-container">
+            {% for task in active_tasks %}
+                <div class="glass-card task-card" id="task-{{ task.id }}">
+                    <div class="task-header">
+                        <h3 class="task-title">{{ task.title }}</h3>
+                        <span class="task-badge">
+                            {{ task.task_type.name|capitalize }}
+                        </span>
+                    </div>
+                    
+                    <div class="task-content">
+                        <p class="task-description">{{ task.description | safe }}</p>
+                        
+                        <!-- Add subtopics container -->
+                        <div class="task-subtopics">
+                            {% for subtask in task.subtopics %}
+                            <div class="subtopic-container">
+                                <div class="subtopic-header">
+                                    <span class="subtopic-title">{{ subtask.subtopic.title }}</span>
+                                    <span class="subtopic-duration">{{ subtask.duration }} min</span>
+                                </div>
+                                <div class="subtopic-description">{{ subtask.subtopic.description }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="task-meta">
+                            <span>
+                                <i class="fas fa-book"></i> {{ task.subject.title }}
+                            </span>
+                            <span>
+                                <i class="fas fa-clock"></i> {{ task.total_duration }} min
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="task-actions">
+                        <button class="btn btn-primary w-full" onclick="event.preventDefault(); completeTask('{{ task.id }}')">
+                            <i class="fas fa-check"></i> Complete
+                        </button>
+                        <div class="d-flex gap-1 mt-1">
+                            <button class="btn btn-secondary flex-1" onclick="event.preventDefault(); skipTask('{{ task.id }}')">
+                                <i class="fas fa-forward"></i> Skip
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    {% if active_tasks %}
+        <div class="glass-card mt-3 mb-3 pomodoro-compact" id="pomodoro-container">
+            <div class="pomodoro-header">
+                <h2 class="mb-2"><i class="fas fa-clock"></i> Pomodoro Timer</h2>
+                <button class="skip-btn hide-pomodoro-btn" id="toggle-pomodoro-btn" title="Hide Pomodoro Timer">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+            <div class="pomodoro-content" id="pomodoro-content">
+                <p class="text-secondary mb-2">Focus on a task with the Pomodoro technique</p>
+                <select id="pomodoro-task-select" class="form-control mb-2">
+                    <option value="">Select a task to focus on...</option>
+                    {% for task in active_tasks %}
+                    <option value="{{ task.id }}" data-title="{{ task.title }}">{{ task.title }}</option>
+                    {% endfor %}
+                </select>
+                <button id="start-pomodoro-btn" class="btn w-full focused-timer-btn">
+                    <i class="fas fa-play-circle"></i> Start Focused Timer
+                </button>
+            </div>
+        </div>
+    {% endif %}
+    
+    {% if completed_tasks %}
+        <div class="completed-tasks-section">
+            <h2 class="section-title">
+                <a href="{{ url_for('main.progress') }}" class="text-accent">
+                    Completed Tasks <i class="fas fa-arrow-right"></i>
+                </a>
+            </h2>
+            <div class="task-container">
+                {% for task in completed_tasks %}
+                    <div class="glass-card task-card" style="opacity: 0.8;">
+                        <div class="task-header">
+                            <h3 class="task-title">{{ task.title }}</h3>
+                            <span class="task-badge">
+                                {{ task.task_type.name|capitalize }}
+                            </span>
+                        </div>
+                        
+                        <div class="task-content">
+                            <p class="task-description">{{ task.description | safe }}</p>
+                            
+                            <!-- Add subtopics container -->
+                            <div class="task-subtopics">
+                                {% for subtask in task.subtopics %}
+                                <div class="subtopic-container">
+                                    <div class="subtopic-header">
+                                        <span class="subtopic-title">{{ subtask.subtopic.title }}</span>
+                                        <span class="subtopic-duration">{{ subtask.duration }} min</span>
+                                    </div>
+                                    <div class="subtopic-description">{{ subtask.subtopic.description }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="task-meta">
+                                <span>
+                                    <i class="fas fa-book"></i> {{ task.subject.title }}
+                                </span>
+                                <span>
+                                    <i class="fas fa-clock"></i> {{ task.total_duration }} min
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="task-actions">
+                            <button class="btn btn-success w-full" disabled>
+                                <i class="fas fa-check"></i> Completed
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+
+<!-- Custom Task Creation Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createTaskModalLabel">Create Custom Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Step navigation -->
+                <div class="step-navigation mb-3">
+                    <div class="step active" id="step1-nav">1. Subject</div>
+                    <div class="step" id="step2-nav">2. Topic</div>
+                    <div class="step" id="step3-nav">3. Subtopics</div>
+                    <div class="step" id="step4-nav">4. Task Type</div>
+                </div>
+
+                <!-- Step 1: Subject Selection -->
+                <div class="step-content active" id="step1-content">
+                    <h6>Select a Subject</h6>
+                    <div class="form-group mb-3">
+                        <select class="form-select" id="subject-select">
+                            <option value="">Select a subject...</option>
+                            <!-- Subjects will be loaded here -->
+                        </select>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-primary" id="step1-next" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Topic Selection -->
+                <div class="step-content" id="step2-content">
+                    <h6>Select a Topic</h6>
+                    <div class="form-group mb-3">
+                        <select class="form-select" id="topic-select">
+                            <option value="">Select a topic...</option>
+                            <!-- Topics will be loaded here -->
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-secondary" id="step2-prev">Back</button>
+                        <button class="btn btn-primary" id="step2-next" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Subtopic Selection -->
+                <div class="step-content" id="step3-content">
+                    <h6>Select Subtopics</h6>
+                    <div class="form-group mb-3">
+                        <div id="subtopic-checkboxes" class="overflow-auto" style="max-height: 250px;">
+                            <!-- Subtopics will be loaded here -->
+                            <p class="text-secondary">No subtopics available</p>
+                        </div>
+                        <div class="text-secondary mt-2">
+                            Total Duration: <span id="total-duration">0</span> minutes
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-secondary" id="step3-prev">Back</button>
+                        <button class="btn btn-primary" id="step3-next" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Task Type Selection -->
+                <div class="step-content" id="step4-content">
+                    <h6>Select Task Type</h6>
+                    <div class="form-group mb-3">
+                        <select class="form-select" id="task-type-select">
+                            <option value="">Select a task type...</option>
+                            <!-- Task types will be loaded here -->
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-secondary" id="step4-prev">Back</button>
+                        <button class="btn btn-primary" id="create-task-btn" disabled>Create Task</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Function for starting Pomodoro with selected task
+function startPomodoroWithTask(taskId, taskTitle) {
+    // Save task to localStorage for the Pomodoro page
+    localStorage.setItem('currentPomodoroTask', taskId);
+    localStorage.setItem('currentPomodoroTaskTitle', taskTitle);
+    
+    // Navigate to the Pomodoro page
+    window.location.href = "{{ url_for('main.pomodoro') }}";
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+        // Handle refresh button with data-href attribute
+        document.querySelector('button[data-href]').addEventListener('click', function() {
+            location.href = this.getAttribute('data-href');
+        });
+        
+        // Toggle Pomodoro Timer visibility
+        const togglePomodoroBtn = document.getElementById('toggle-pomodoro-btn');
+        const pomodoroContent = document.getElementById('pomodoro-content');
+        
+        if (togglePomodoroBtn && pomodoroContent) {
+            // Check if previously hidden
+            const isPomodoroHidden = localStorage.getItem('pomodoroHidden') === 'true';
+            
+            if (isPomodoroHidden) {
+                pomodoroContent.classList.add('hidden');
+                togglePomodoroBtn.innerHTML = '<i class="fas fa-plus"></i>';
+                togglePomodoroBtn.title = "Show Pomodoro Timer";
+            }
+            
+            togglePomodoroBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (pomodoroContent.classList.contains('hidden')) {
+                    pomodoroContent.classList.remove('hidden');
+                    togglePomodoroBtn.innerHTML = '<i class="fas fa-minus"></i>';
+                    togglePomodoroBtn.title = "Hide Pomodoro Timer";
+                    localStorage.setItem('pomodoroHidden', 'false');
+                } else {
+                    pomodoroContent.classList.add('hidden');
+                    togglePomodoroBtn.innerHTML = '<i class="fas fa-plus"></i>';
+                    togglePomodoroBtn.title = "Show Pomodoro Timer";
+                    localStorage.setItem('pomodoroHidden', 'true');
+                }
+            });
+        }
+        
+        // Setup Pomodoro Timer button
+        const startPomodoroBtn = document.getElementById('start-pomodoro-btn');
+        const pomodoroTaskSelect = document.getElementById('pomodoro-task-select');
+        
+        if (startPomodoroBtn && pomodoroTaskSelect) {
+            startPomodoroBtn.addEventListener('click', function() {
+                const selectedOption = pomodoroTaskSelect.options[pomodoroTaskSelect.selectedIndex];
+                const taskId = pomodoroTaskSelect.value;
+                
+                if (!taskId) {
+                    alert('Please select a task first');
+                    return;
+                }
+                
+                const taskTitle = selectedOption.getAttribute('data-title');
+                startPomodoroWithTask(taskId, taskTitle);
+            });
+        }
+        
+        // Refresh tasks button
+        const refreshTasksBtn = document.getElementById('refresh-tasks-btn');
+        if (refreshTasksBtn) {
+            refreshTasksBtn.addEventListener('click', function() {
+                if (confirm('This will replace all your current tasks with new ones. Continue?')) {
+                    fetch('/api/tasks/refresh', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Generate tasks button (for when no tasks exist)
+        const generateTasksBtn = document.getElementById('generate-tasks-btn');
+        if (generateTasksBtn) {
+            generateTasksBtn.addEventListener('click', function() {
+                fetch('/api/tasks/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                });
+            });
+        }
+        
+        // Custom task creation
+        const addBonusTaskBtn = document.getElementById('add-bonus-task-btn');
+        if (addBonusTaskBtn) {
+            addBonusTaskBtn.addEventListener('click', function() {
+                // Open the custom task modal
+                const modal = new bootstrap.Modal(document.getElementById('createTaskModal'));
+                modal.show();
+                
+                // Load the curriculum data if not already loaded
+                if (!window.curriculumHierarchy) {
+                    loadCurriculumData();
+                }
+                
+                // Load task types if not already loaded
+                if (!window.taskTypes) {
+                    loadTaskTypes();
+                }
+            });
+        }
+    });
+
+    // Variables to store data
+    window.curriculumHierarchy = null;
+    window.taskTypes = null;
+    window.selectedSubjectId = null;
+    window.selectedTopicId = null;
+    window.selectedSubtopicIds = [];
+    window.selectedTaskTypeId = null;
+    
+    // Load curriculum data (subjects, topics, subtopics)
+    function loadCurriculumData() {
+        fetch('/api/curriculum/hierarchy')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.curriculumHierarchy = data.hierarchy;
+                    populateSubjects();
+                }
+            })
+            .catch(error => console.error('Error loading curriculum data:', error));
+    }
+    
+    // Load task types
+    function loadTaskTypes() {
+        fetch('/api/task_types')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.taskTypes = data.task_types;
+                    populateTaskTypes();
+                }
+            })
+            .catch(error => console.error('Error loading task types:', error));
+    }
+    
+    // Populate subject dropdown
+    function populateSubjects() {
+        const subjectSelect = document.getElementById('subject-select');
+        subjectSelect.innerHTML = '<option value="">Select a subject...</option>';
+        
+        if (window.curriculumHierarchy && window.curriculumHierarchy.length > 0) {
+            window.curriculumHierarchy.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject.id;
+                option.textContent = subject.title;
+                subjectSelect.appendChild(option);
+            });
+        }
+    }
+    
+    // Populate topic dropdown based on selected subject
+    function populateTopics(subjectId) {
+        const topicSelect = document.getElementById('topic-select');
+        topicSelect.innerHTML = '<option value="">Select a topic...</option>';
+        
+        if (window.curriculumHierarchy) {
+            const subject = window.curriculumHierarchy.find(s => s.id == subjectId);
+            if (subject && subject.topics.length > 0) {
+                subject.topics.forEach(topic => {
+                    const option = document.createElement('option');
+                    option.value = topic.id;
+                    option.textContent = topic.title;
+                    topicSelect.appendChild(option);
+                });
+            }
+        }
+    }
+    
+    // Populate subtopics based on selected topic
+    function populateSubtopics(topicId) {
+        const subtopicContainer = document.getElementById('subtopic-checkboxes');
+        subtopicContainer.innerHTML = '';
+        
+        if (window.curriculumHierarchy && window.selectedSubjectId) {
+            const subject = window.curriculumHierarchy.find(s => s.id == window.selectedSubjectId);
+            if (subject) {
+                const topic = subject.topics.find(t => t.id == topicId);
+                if (topic && topic.subtopics.length > 0) {
+                    topic.subtopics.forEach(subtopic => {
+                        const checkboxDiv = document.createElement('div');
+                        checkboxDiv.className = 'form-check';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.className = 'form-check-input subtopic-checkbox';
+                        checkbox.id = `subtopic-${subtopic.id}`;
+                        checkbox.value = subtopic.id;
+                        checkbox.dataset.duration = subtopic.duration;
+                        checkbox.addEventListener('change', updateTotalDuration);
+                        
+                        const label = document.createElement('label');
+                        label.className = 'form-check-label';
+                        label.htmlFor = `subtopic-${subtopic.id}`;
+                        label.textContent = `${subtopic.title} (${subtopic.duration} min)`;
+                        
+                        checkboxDiv.appendChild(checkbox);
+                        checkboxDiv.appendChild(label);
+                        subtopicContainer.appendChild(checkboxDiv);
+                    });
+                } else {
+                    subtopicContainer.innerHTML = '<p class="text-secondary">No subtopics available for this topic</p>';
+                }
+            }
+        }
+        
+        // Reset selected subtopics
+        window.selectedSubtopicIds = [];
+        updateTotalDuration();
+    }
+    
+    // Populate task type dropdown
+    function populateTaskTypes() {
+        const taskTypeSelect = document.getElementById('task-type-select');
+        taskTypeSelect.innerHTML = '<option value="">Select a task type...</option>';
+        
+        if (window.taskTypes && window.taskTypes.length > 0) {
+            window.taskTypes.forEach(taskType => {
+                const option = document.createElement('option');
+                option.value = taskType.id;
+                option.textContent = taskType.name.charAt(0).toUpperCase() + taskType.name.slice(1);
+                option.title = taskType.description || '';
+                taskTypeSelect.appendChild(option);
+            });
+        }
+    }
+    
+    // Update total duration based on selected subtopics
+    function updateTotalDuration() {
+        const durationElement = document.getElementById('total-duration');
+        let totalDuration = 0;
+        window.selectedSubtopicIds = [];
+        
+        document.querySelectorAll('.subtopic-checkbox:checked').forEach(checkbox => {
+            totalDuration += parseInt(checkbox.dataset.duration || 0, 10);
+            window.selectedSubtopicIds.push(parseInt(checkbox.value, 10));
+        });
+        
+        durationElement.textContent = totalDuration;
+        
+        // Enable/disable next button based on selection
+        document.getElementById('step3-next').disabled = window.selectedSubtopicIds.length === 0;
+    }
+    
+    // Step 1: Subject selection
+    document.getElementById('subject-select').addEventListener('change', function() {
+        window.selectedSubjectId = this.value ? parseInt(this.value, 10) : null;
+        document.getElementById('step1-next').disabled = !window.selectedSubjectId;
+    });
+    
+    // Step 2: Topic selection
+    document.getElementById('topic-select').addEventListener('change', function() {
+        window.selectedTopicId = this.value ? parseInt(this.value, 10) : null;
+        document.getElementById('step2-next').disabled = !window.selectedTopicId;
+    });
+    
+    // Step 4: Task type selection
+    document.getElementById('task-type-select').addEventListener('change', function() {
+        window.selectedTaskTypeId = this.value ? parseInt(this.value, 10) : null;
+        document.getElementById('create-task-btn').disabled = !window.selectedTaskTypeId;
+    });
+    
+    // Step navigation buttons
+    document.getElementById('step1-next').addEventListener('click', function() {
+        if (window.selectedSubjectId) {
+            showStep(2);
+            populateTopics(window.selectedSubjectId);
+        }
+    });
+    
+    document.getElementById('step2-prev').addEventListener('click', function() {
+        showStep(1);
+    });
+    
+    document.getElementById('step2-next').addEventListener('click', function() {
+        if (window.selectedTopicId) {
+            showStep(3);
+            populateSubtopics(window.selectedTopicId);
+        }
+    });
+    
+    document.getElementById('step3-prev').addEventListener('click', function() {
+        showStep(2);
+    });
+    
+    document.getElementById('step3-next').addEventListener('click', function() {
+        if (window.selectedSubtopicIds.length > 0) {
+            showStep(4);
+        }
+    });
+    
+    document.getElementById('step4-prev').addEventListener('click', function() {
+        showStep(3);
+    });
+    
+    // Create task button
+    document.getElementById('create-task-btn').addEventListener('click', function() {
+        if (window.selectedSubjectId && window.selectedTopicId && 
+            window.selectedSubtopicIds.length > 0 && window.selectedTaskTypeId) {
+            
+            createCustomTask({
+                subject_id: window.selectedSubjectId,
+                topic_id: window.selectedTopicId,
+                subtopic_ids: window.selectedSubtopicIds,
+                task_type_id: window.selectedTaskTypeId
+            });
+        }
+    });
+    
+    // Show step function
+    function showStep(stepNumber) {
+        // Update navigation
+        document.querySelectorAll('.step').forEach((step, index) => {
+            if (index + 1 < stepNumber) {
+                step.classList.add('completed');
+                step.classList.remove('active');
+            } else if (index + 1 === stepNumber) {
+                step.classList.add('active');
+                step.classList.remove('completed');
+            } else {
+                step.classList.remove('active', 'completed');
+            }
+        });
+        
+        // Show content
+        document.querySelectorAll('.step-content').forEach((content, index) => {
+            if (index + 1 === stepNumber) {
+                content.classList.add('active');
+            } else {
+                content.classList.remove('active');
+            }
+        });
+    }
+    
+    // Create custom task
+    function createCustomTask(taskData) {
+        fetch('/api/tasks/create_custom', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(taskData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close modal and reload page
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createTaskModal'));
+                modal.hide();
+                location.reload();
+            } else {
+                alert('Error creating task: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error creating task:', error);
+            alert('Error creating task. Please try again.');
+        });
+    }
+</script>
+{% endblock %}

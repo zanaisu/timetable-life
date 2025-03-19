@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar | Timetable{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-between items-center mb-3">
+    <h1 class="page-title">Calendar</h1>
+    <div>
+        <a href="{{ url_for('main.calendar', month=prev_month, year=prev_year) }}" class="btn btn-secondary">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <span class="mx-2">{{ current_date.strftime('%B %Y') }}</span>
+        <a href="{{ url_for('main.calendar', month=next_month, year=next_year) }}" class="btn btn-secondary">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+</div>
+
+<div class="glass-card">
+    <div class="calendar-header d-flex mb-2">
+        <div class="calendar-cell text-center">Sun</div>
+        <div class="calendar-cell text-center">Mon</div>
+        <div class="calendar-cell text-center">Tue</div>
+        <div class="calendar-cell text-center">Wed</div>
+        <div class="calendar-cell text-center">Thu</div>
+        <div class="calendar-cell text-center">Fri</div>
+        <div class="calendar-cell text-center">Sat</div>
+    </div>
+    
+    <div class="calendar-grid">
+        {% set first_day = current_date.replace(day=1) %}
+        {% set last_day = (first_day.replace(month=first_day.month+1 if first_day.month < 12 else 1, year=first_day.year if first_day.month < 12 else first_day.year+1) - timedelta(days=1)).day %}
+        {% set first_weekday = first_day.weekday() %}
+        {% set first_sunday = (first_weekday + 1) % 7 %}
+        
+        {% set weeks = ((last_day + first_sunday - 1) // 7) + 1 %}
+        
+        {% for week in range(weeks) %}
+            <div class="calendar-row d-flex">
+                {% for day_offset in range(7) %}
+                    {% set day_num = (week * 7 + day_offset) - first_sunday + 1 %}
+                    {% set is_current_month = day_num > 0 and day_num <= last_day %}
+                    {% set date_str = current_date.replace(day=day_num).strftime('%Y-%m-%d') if is_current_month else '' %}
+                    {% set is_current_day = is_current_month and current_date.day == day_num %}
+                    
+                    <div class="calendar-cell {% if not is_current_month %}calendar-other-month{% endif %} {% if is_current_day %}calendar-current-day{% endif %}">
+                        {% if is_current_month %}
+                            <div class="calendar-date">{{ day_num }}</div>
+                            
+                            {% if date_str in calendar_data %}
+                                {% if calendar_data[date_str].exams %}
+                                    <div class="calendar-exams">
+                                        {% for exam in calendar_data[date_str].exams %}
+                                            <div class="calendar-exam">
+                                                <div class="calendar-exam-title">
+                                                    <i class="fas fa-graduation-cap exam-icon"></i>
+                                                    <span>{{ exam.title }}</span>
+                                                </div>
+                                                <div class="calendar-exam-subject">{{ exam.subject.title }}</div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="calendar-events">
+                                    {% set task_by_subject = {} %}
+                                    
+                                    {% for task in calendar_data[date_str].tasks %}
+                                        {% if task.subject.title not in task_by_subject %}
+                                            {% set _ = task_by_subject.update({task.subject.title: {'tasks': [], 'subtopics': {}}}) %}
+                                        {% endif %}
+                                        {% set _ = task_by_subject[task.subject.title].tasks.append(task) %}
+                                        
+                                        {% for task_subtopic in task.subtopics %}
+                                            {% set subtopic = task_subtopic.subtopic %}
+                                            {% if subtopic.topic.title not in task_by_subject[task.subject.title].subtopics %}
+                                                {% set _ = task_by_subject[task.subject.title].subtopics.update({subtopic.topic.title: []}) %}
+                                            {% endif %}
+                                            {% set _ = task_by_subject[task.subject.title].subtopics[subtopic.topic.title].append(subtopic) %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                    
+                                    {% for subject, details in task_by_subject.items() %}
+                                        <div class="calendar-event glass-card" style="--event-color: var(--accent-color);">
+                                            <div class="calendar-event-title">{{ subject }}</div>
+                                            
+                                            {% for topic, subtopics in details.subtopics.items() %}
+                                                <div class="calendar-topic">
+                                                    <div class="calendar-topic-title" onclick="toggleSubtopics(this)">
+                                                        <i class="fas fa-caret-right"></i> {{ topic }}
+                                                    </div>
+                                                    <div class="calendar-subtopics" style="display: none;">
+                                                        {% for subtopic in subtopics %}
+                                                            <div class="calendar-subtopic">
+                                                                <span class="subtopic-bullet">•</span> {{ subtopic.title }}
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+    .calendar-cell {
+        flex: 1;
+        min-height: 120px;
+        border: 1px solid var(--border-color);
+        padding: 8px;
+        position: relative;
+        overflow: auto;
+    }
+    
+    .calendar-header .calendar-cell {
+        min-height: auto;
+        padding: 8px;
+        font-weight: 500;
+        background-color: var(--bg-secondary);
+    }
+    
+    .calendar-date {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 25px;
+        height: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    
+    .calendar-current-day .calendar-date {
+        background-color: var(--accent-color);
+        color: white;
+    }
+    
+    .calendar-other-month {
+        background-color: rgba(0, 0, 0, 0.02);
+        color: var(--text-secondary);
+    }
+    
+    [data-theme="dark"] .calendar-other-month {
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+    
+    .calendar-events {
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .calendar-event {
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        border-left: 3px solid var(--event-color, var(--accent-color));
+    }
+    
+    .calendar-event-title {
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .calendar-event-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+    
+    .mx-2 {
+        margin: 0 10px;
+    }
+    
+    .calendar-exams {
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .calendar-exam {
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        border-left: 3px solid #e74c3c;
+        background-color: rgba(231, 76, 60, 0.1);
+    }
+    
+    .calendar-exam-title {
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .exam-icon {
+        color: #e74c3c;
+    }
+    
+    .calendar-exam-subject {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+    
+    .calendar-topic {
+        margin-top: 5px;
+    }
+    
+    .calendar-topic-title {
+        font-size: 0.8rem;
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .calendar-topic-title i {
+        transition: transform 0.2s;
+    }
+    
+    .calendar-topic-title.expanded i {
+        transform: rotate(90deg);
+    }
+    
+    .calendar-subtopics {
+        padding-left: 15px;
+    }
+    
+    .calendar-subtopic {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin: 3px 0;
+    }
+    
+    .subtopic-bullet {
+        color: var(--accent-color);
+        margin-right: 2px;
+    }
+</style>
+
+<script>
+    function toggleSubtopics(element) {
+        const subtopicsEl = element.nextElementSibling;
+        const isExpanded = element.classList.contains('expanded');
+        
+        if (isExpanded) {
+            subtopicsEl.style.display = 'none';
+            element.classList.remove('expanded');
+        } else {
+            subtopicsEl.style.display = 'block';
+            element.classList.add('expanded');
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ 'dark' if current_user.is_authenticated and current_user.dark_mode else 'light' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Timetable{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/svg+xml">
+    <link rel="alternate icon" href="{{ url_for('static', filename='images/favicon-light.svg') }}" type="image/svg+xml" media="(prefers-color-scheme: light)">
+    <link rel="alternate icon" href="{{ url_for('static', filename='images/favicon-dark.svg') }}" type="image/svg+xml" media="(prefers-color-scheme: dark)">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<header>
+        <nav class="navbar glass-noise">
+            <a href="{{ url_for('main.index') }}" class="navbar-brand">Timetable</a>
+            
+            <div class="mobile-menu-toggle" id="mobile-menu-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+            
+            <ul class="navbar-nav" id="navbar-nav">
+                {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('main.index') }}" class="nav-link {{ 'active' if request.endpoint == 'main.index' }}">Dashboard</a></li>
+                <li><a href="{{ url_for('main.calendar') }}" class="nav-link {{ 'active' if request.endpoint == 'main.calendar' }}">Calendar</a></li>
+                <li><a href="{{ url_for('main.curriculum') }}" class="nav-link {{ 'active' if request.endpoint == 'main.curriculum' }}">Curriculum</a></li>
+                <li><a href="{{ url_for('main.progress') }}" class="nav-link {{ 'active' if request.endpoint == 'main.progress' }}">Progress</a></li>
+                <li><a href="{{ url_for('main.pomodoro') }}" class="nav-link {{ 'active' if request.endpoint == 'main.pomodoro' }}">Pomodoro</a></li>
+                <li><a href="{{ url_for('main.settings') }}" class="nav-link {{ 'active' if request.endpoint == 'main.settings' }}">Settings</a></li>
+                <li><a href="{{ url_for('auth.logout') }}" class="nav-link">Logout</a></li>
+                <li>
+                    <div class="dark-mode-toggle glass-noise" id="dark-mode-toggle">
+                        <i class="fas {{ 'fa-sun' if current_user.dark_mode else 'fa-moon' }}"></i>
+                        <span>{{ 'Light Mode' if current_user.dark_mode else 'Dark Mode' }}</span>
+                    </div>
+                </li>
+                {% else %}
+                <li><a href="{{ url_for('auth.login') }}" class="nav-link {{ 'active' if request.endpoint == 'auth.login' }}">Login</a></li>
+                <li><a href="{{ url_for('auth.register') }}" class="nav-link {{ 'active' if request.endpoint == 'auth.register' }}">Register</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <script>
+        // Mobile Navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const navbarNav = document.getElementById('navbar-nav');
+            
+            if (mobileMenuToggle && navbarNav) {
+                mobileMenuToggle.addEventListener('click', function() {
+                    mobileMenuToggle.classList.toggle('active');
+                    navbarNav.classList.toggle('open');
+                });
+                
+                // Close menu when clicking on nav links
+                document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+                    link.addEventListener('click', function() {
+                        mobileMenuToggle.classList.remove('active');
+                        navbarNav.classList.remove('open');
+                    });
+                });
+            }
+        });
+        
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.querySelector('.flash-messages').appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            // Remove after duration
+            setTimeout(() => {
+                toast.classList.remove('show');
+                // Remove from DOM after animation completes
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, duration);
+        }
+        
+        // Apply animations to content
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add slide-up animation to main content
+            const mainContent = document.querySelector('main.container');
+            if (mainContent) {
+                mainContent.classList.add('slide-up');
+            }
+            
+            // Apply staggered animation to task cards and list items
+            document.querySelectorAll('.grid').forEach(grid => {
+                grid.classList.add('stagger-fade-in');
+            });
+            
+            // Apply lift effect and glass noise to cards
+            document.querySelectorAll('.glass-card').forEach(card => {
+                card.classList.add('hover-lift', 'glass-noise');
+            });
+            
+            // Add background animation to main content
+            document.querySelector('body').classList.add('animated-bg');
+        });
+        
+        // Dark mode toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', function() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    
+                    // Update icon and text
+                    const icon = this.querySelector('i');
+                    const text = this.querySelector('span');
+                    
+                    if (newTheme === 'dark') {
+                        icon.classList.replace('fa-moon', 'fa-sun');
+                        text.textContent = 'Light Mode';
+                    } else {
+                        icon.classList.replace('fa-sun', 'fa-moon');
+                        text.textContent = 'Dark Mode';
+                    }
+                    
+                    // Save preference via API
+                    fetch('/api/update-dark-mode', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            dark_mode: newTheme === 'dark'
+                        }),
+                    });
+                });
+            }
+            
+            // Auto-hide flash messages after 5 seconds
+            const flashMessages = document.querySelectorAll('.flash');
+            flashMessages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(100%)';
+                    setTimeout(function() {
+                        message.remove();
+                    }, 300);
+                }, 5000);
+            });
+        });
+
+        // Task actions
+        function completeTask(taskId) {
+            console.log("TASK COMPLETION STARTED!", new Date().toISOString());
+            
+            // Ensure we don't navigate away from page
+            if (event) {
+                event.preventDefault();
+            }
+            
+            // Add completion animation to the task card
+            const taskCard = document.getElementById(`task-${taskId}`);
+            if (taskCard) {
+                taskCard.classList.add('completed');
+            }
+            
+            console.log(`Completing task ${taskId}`);
+            
+            fetch(`/api/tasks/complete/${taskId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("API response:", data);
+                
+                if (data.success) {
+                    // Show success toast
+                    showToast('Task completed successfully!', 'success');
+                    
+                    // Remove task from active list after animation completes
+                    setTimeout(() => {
+                        if (taskCard) {
+                            taskCard.remove();
+                        }
+                    }, 500);
+                    
+                    // Show confidence prompt if subtopics are returned
+                    if (data.subtopics && data.subtopics.length > 0) {
+                        console.log("Showing confidence prompt for subtopics:", data.subtopics);
+                        setTimeout(() => {
+                            showConfidencePrompt(taskId, data.subtopics);
+                        }, 600); // Wait until after the task card animation completes
+                    } else {
+                        console.log("No subtopics returned from API or empty array:", data.subtopics);
+                    }
+                } else {
+                    showToast('Error completing task', 'error');
+                    console.error("Task completion failed:", data.message || "Unknown error");
+                }
+            })
+            .catch(error => {
+                console.error("Error completing task:", error);
+                showToast('Network error occurred', 'error');
+            });
+            
+            // Prevent form submission or link navigation
+            return false;
+        }
+        
+        function skipTask(taskId) {
+            // Prevent default navigation
+            if (event) {
+                event.preventDefault();
+            }
+            
+            console.log("SKIP TASK STARTED!", new Date().toISOString());
+            
+            const taskCard = document.getElementById(`task-${taskId}`);
+            if (taskCard) {
+                // Add slide-out animation
+                taskCard.style.transform = 'translateX(100%)';
+                taskCard.style.opacity = '0';
+                taskCard.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            }
+            
+            fetch(`/api/tasks/skip/${taskId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("API skip response:", data);
+                
+                if (data.success) {
+                    showToast('Task skipped, generating a new one...', 'info');
+                    
+                    // Show confidence prompt if subtopics are returned
+                    if (data.subtopics && data.subtopics.length > 0) {
+                        console.log("Showing confidence prompt for skipped task subtopics:", data.subtopics);
+                        setTimeout(() => {
+                            showConfidencePrompt(taskId, data.subtopics);
+                        }, 600); // Wait until after the task card animation completes
+                    } else {
+                        console.log("No subtopics returned from skip API or empty array");
+                        // Reload page after a delay to show new task
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    }
+                } else {
+                    showToast('Error skipping task', 'error');
+                    console.error("Task skip failed:", data.message || "Unknown error");
+                }
+            })
+            .catch(error => {
+                console.error("Error skipping task:", error);
+                showToast('Network error occurred', 'error');
+            });
+            
+            // Prevent default link/form behavior
+            return false;
+        }
+        
+        function showConfidencePrompt(taskId, subtopics) {
+            // Guard clause: if no subtopics are provided, just return without showing modal
+            if (!subtopics || !Array.isArray(subtopics) || subtopics.length === 0) {
+                console.log("No subtopics provided to confidence prompt, skipping modal");
+                return;
+            }
+            
+            console.log(`Creating confidence modal for ${subtopics.length} subtopics`);
+            
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.zIndex = '2000'; // Ensure highest z-index
+            
+            // Create modal content
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content glass-card glass-noise';
+            modalContent.style.zIndex = '2001'; // Ensure highest z-index
+            modalContent.style.maxHeight = '80vh';
+            modalContent.style.overflowY = 'auto';
+            
+            // Create modal header
+            const modalHeader = document.createElement('div');
+            modalHeader.innerHTML = `<h2 class="mb-2">Update Your Confidence</h2>
+                                    <p class="text-secondary mb-2">After completing this task, how confident do you feel about these subtopics?</p>`;
+            
+            // Create form
+            const form = document.createElement('form');
+            
+            // Add subtopics
+            subtopics.forEach(subtopic => {
+                if (!subtopic || !subtopic.id || !subtopic.title) {
+                    console.log("Invalid subtopic object:", subtopic);
+                    return; // Skip this iteration
+                }
+                
+                const subtopicDiv = document.createElement('div');
+                subtopicDiv.className = 'mb-2 glass-card p-2';
+                
+                const subtopicHeader = document.createElement('div');
+                subtopicHeader.className = 'd-flex justify-between items-center';
+                
+                const title = document.createElement('h3');
+                title.textContent = subtopic.title;
+                
+                const priorityCheckbox = document.createElement('div');
+                priorityCheckbox.innerHTML = `
+                    <label class="d-flex items-center gap-1">
+                        <input type="checkbox" name="priority_${subtopic.id}" ${subtopic.priority ? 'checked' : ''}>
+                        <span>Priority</span>
+                    </label>
+                `;
+                
+                subtopicHeader.appendChild(title);
+                subtopicHeader.appendChild(priorityCheckbox);
+                subtopicDiv.appendChild(subtopicHeader);
+                
+                // Add confidence level label
+                const confidenceLabel = document.createElement('div');
+                confidenceLabel.className = 'mt-1 mb-1';
+                confidenceLabel.innerHTML = `<span class="confidence-label">Your confidence level:</span>`;
+                subtopicDiv.appendChild(confidenceLabel);
+                
+                // Confidence selector
+                const confidenceSelector = document.createElement('div');
+                confidenceSelector.className = 'confidence-selector';
+                
+                for (let i = 1; i <= 5; i++) {
+                    const option = document.createElement('div');
+                    option.className = `confidence-option ${i === subtopic.confidence ? 'selected' : ''}`;
+                    option.setAttribute('data-value', i);
+                    option.setAttribute('title', getConfidenceLabel(i));
+                    
+                    option.onclick = function() {
+                        // Remove selected class from all options
+                        confidenceSelector.querySelectorAll('.confidence-option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        // Add selected class to clicked option
+                        this.classList.add('selected');
+                        // Update hidden input
+                        document.getElementById(`confidence_${subtopic.id}`).value = this.getAttribute('data-value');
+                    };
+                    confidenceSelector.appendChild(option);
+                }
+                
+                subtopicDiv.appendChild(confidenceSelector);
+                
+                // Add confidence level text display
+                const confidenceText = document.createElement('div');
+                confidenceText.className = 'mt-1 text-small';
+                confidenceText.id = `confidence_text_${subtopic.id}`;
+                confidenceText.textContent = getConfidenceLabel(subtopic.confidence);
+                subtopicDiv.appendChild(confidenceText);
+                
+                // Update text when confidence changes
+                const updateConfidenceText = (level) => {
+                    const textEl = document.getElementById(`confidence_text_${subtopic.id}`);
+                    if (textEl) {
+                        textEl.textContent = getConfidenceLabel(parseInt(level));
+                    }
+                };
+                
+                // Add event listener to each option for updating text
+                confidenceSelector.querySelectorAll('.confidence-option').forEach(opt => {
+                    opt.addEventListener('click', () => {
+                        updateConfidenceText(opt.getAttribute('data-value'));
+                    });
+                });
+                
+                // Hidden input for form submission
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = `confidence_${subtopic.id}`;
+                hiddenInput.name = `confidence_${subtopic.id}`;
+                hiddenInput.value = subtopic.confidence;
+                subtopicDiv.appendChild(hiddenInput);
+                
+                form.appendChild(subtopicDiv);
+            });
+            
+            // Add close button
+            const closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'btn btn-secondary mt-2';
+            closeButton.textContent = 'Close';
+            closeButton.style.marginRight = '10px';
+            closeButton.onclick = function() {
+                // Close modal
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    document.body.removeChild(modal);
+                }, 300);
+            };
+            
+            // Submit button
+            const submitBtn = document.createElement('button');
+            submitBtn.type = 'button';
+            submitBtn.className = 'btn btn-primary mt-2';
+            submitBtn.textContent = 'Save & Continue';
+            submitBtn.onclick = function() {
+                // Collect data
+                const data = {
+                    subtopics: {}
+                };
+                
+                subtopics.forEach(subtopic => {
+                    if (subtopic && subtopic.id) {
+                        data.subtopics[subtopic.id] = {
+                            confidence: parseInt(document.getElementById(`confidence_${subtopic.id}`).value),
+                            priority: document.querySelector(`input[name="priority_${subtopic.id}"]`).checked
+                        };
+                    }
+                });
+                
+                console.log("Submitting confidence data:", data);
+                
+                // Send to API
+                fetch('/api/subtopics/update_confidence', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.success) {
+                        showToast('Confidence levels updated!', 'success');
+                        // Close modal
+                        modal.classList.remove('active');
+                        setTimeout(() => {
+                            document.body.removeChild(modal);
+                            // Refresh page to show updated task list
+                            location.reload();
+                        }, 300);
+                    } else {
+                        showToast('Error updating confidence: ' + (result.message || 'Unknown error'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error("Error updating confidence:", error);
+                    showToast('Network error occurred', 'error');
+                });
+            };
+            
+            // Button container for alignment
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'd-flex justify-between mt-2';
+            buttonContainer.appendChild(closeButton);
+            buttonContainer.appendChild(submitBtn);
+            
+            form.appendChild(buttonContainer);
+            modalContent.appendChild(modalHeader);
+            modalContent.appendChild(form);
+            modal.appendChild(modalContent);
+            
+            // Add to body and make visible
+            document.body.appendChild(modal);
+            
+            // Force reflow before adding active class for animation
+            void modal.offsetWidth;
+            
+            // Add active class to trigger animation
+            modal.classList.add('active');
+            
+            // Prevent background scrolling while modal is open
+            document.body.style.overflow = 'hidden';
+            
+            // Re-enable scrolling when modal is closed
+            closeButton.addEventListener('click', () => {
+                document.body.style.overflow = 'auto';
+            });
+            
+            submitBtn.addEventListener('click', () => {
+                document.body.style.overflow = 'auto';
+            });
+        }
+        
+        // Helper function for confidence level labels
+        function getConfidenceLabel(level) {
+            switch(level) {
+                case 1: return 'Very Low Confidence - Need to review completely';
+                case 2: return 'Low Confidence - Need significant practice';
+                case 3: return 'Medium Confidence - Could use more practice';
+                case 4: return 'High Confidence - Know it well';
+                case 5: return 'Very High Confidence - Complete mastery';
+                default: return 'Medium Confidence';
+            }
+        }
+        
+        // Page-specific elements control
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide elements that don't belong on certain pages
+            const currentPath = window.location.pathname;
+            
+            // Handle curriculum page
+            if (currentPath.includes('/curriculum')) {
+                const addTaskBtn = document.getElementById('add-bonus-task-btn');
+                if (addTaskBtn) {
+                    addTaskBtn.style.display = 'none';
+                }
+            }
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+    <script>
+        // Scrolling behavior is now handled through CSS
+    </script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cache-manager.js') }}"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/js/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

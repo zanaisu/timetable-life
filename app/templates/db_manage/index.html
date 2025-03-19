@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Management</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: #444;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            margin-bottom: 10px;
+        }
+        label {
+            font-weight: 500;
+            display: inline-block;
+            min-width: 120px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        .button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #4a6da7;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #3b5998;
+        }
+        .button-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .button-danger {
+            background-color: #d9534f;
+        }
+        .button-danger:hover {
+            background-color: #c9302c;
+        }
+        .button-success {
+            background-color: #5cb85c;
+        }
+        .button-success:hover {
+            background-color: #449d44;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input[type="file"], input[type="checkbox"] {
+            margin-top: 5px;
+        }
+        .alert {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flex-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        .apply-form {
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Database Management</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Current Database Information -->
+        <div class="card">
+            <h2>Current Database</h2>
+            {% if db_info %}
+                <div class="info-item">
+                    <label>Path:</label> <span>{{ db_info.path }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Size:</label> <span>{{ db_info.size }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Last Modified:</label> <span>{{ db_info.modified }}</span>
+                </div>
+                <div class="flex-row" style="margin-top: 15px;">
+                    <a href="{{ url_for('db_manage.export_db') }}" class="button">Export Database</a>
+                    <form action="{{ url_for('db_manage.cache_current') }}" method="post">
+                        <button type="submit" class="button button-success">Cache Current Database</button>
+                    </form>
+                </div>
+            {% else %}
+                <p>No database information available.</p>
+            {% endif %}
+        </div>
+        
+        <!-- Import Database -->
+        <div class="card">
+            <h2>Import Database</h2>
+            <form action="{{ url_for('db_manage.import_db') }}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="db_file">Select Database File:</label>
+                    <input type="file" id="db_file" name="db_file" accept=".db" required>
+                </div>
+                <div class="form-group">
+                    <input type="checkbox" id="apply_immediately" name="apply_immediately">
+                    <label for="apply_immediately">Apply immediately</label>
+                </div>
+                <button type="submit" class="button">Import</button>
+            </form>
+        </div>
+        
+        <!-- Cached Databases -->
+        <div class="card">
+            <h2>Cached Databases</h2>
+            {% if cached_dbs %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Size</th>
+                            <th>Modified</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for db in cached_dbs %}
+                            <tr>
+                                <td>{{ db.name }}</td>
+                                <td>{{ db.size }}</td>
+                                <td>{{ db.modified }}</td>
+                                <td class="actions">
+                                    <form action="{{ url_for('db_manage.apply_db', filename=db.name) }}" method="post" class="apply-form">
+                                        <button type="submit" class="button button-small button-success">Apply</button>
+                                    </form>
+                                    <form action="{{ url_for('db_manage.delete_cached', filename=db.name) }}" method="post" class="apply-form">
+                                        <button type="submit" class="button button-small button-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No cached database files available.</p>
+            {% endif %}
+        </div>
+        
+        <!-- Apply and Restart -->
+        <div class="card">
+            <h2>Apply and Restart</h2>
+            <p>To apply a database and restart the application, select a cached database above and use the Apply button.</p>
+            <p>After applying a database, you can return to the main application.</p>
+            <a href="/" class="button">Return to Application</a>
+        </div>
+    </div>
+</body>
+</html> 

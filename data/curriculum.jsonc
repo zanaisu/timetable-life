@@ -1,0 +1,798 @@
+// Subjects are marked with a value of 1, topics are marked with a value of 3, subtopics are marked with a value of 4
+// subtopics contain descriptions and so do topics
+
+
+{
+  "Biology Year 12": {
+    "value": 1,
+    "Title": "OCR A-Level Biology Year 12 (H420)",
+    "Topics": [
+      {
+        "Name": "Module 1",
+        "value": 3,
+        "Title": "Development of Practical Skills in Biology",
+        "Description": "Applies to all modules and both years",
+        "Subtopics": [
+          {
+            "Title": "Planning experiments",
+            "Description": "Practical research methods and experimental design",
+            "value": 4
+          },
+          {
+            "Title": "Collecting and recording data",
+            "Description": "Data collection methods and standardization techniques",
+            "value": 4
+          },
+          {
+            "Title": "Analyzing and interpreting data",
+            "Description": "Statistical treatment and visualization of results",
+            "value": 4
+          },
+          {
+            "Title": "Evaluating experiments",
+            "Description": "Assessing validity, reliability and limitations",
+            "value": 4
+          }
+        ]
+      },
+      {
+        "Name": "Module 2",
+        "value": 3,
+        "Title": "Foundations in Biology",
+        "Description": "Core biological concepts and fundamentals",
+        "Subtopics": [
+          {
+            "Title": "Cell structure",
+            "Description": "microscopy, organelles, cell theory",
+            "value": 4
+          },
+          {
+            "Title": "Biological molecules",
+            "Description": "water, carbohydrates, lipids, proteins, nucleic acids",
+            "value": 4
+          },
+          {
+            "Title": "Enzymes",
+            "Description": "action, inhibition, factors affecting rate",
+            "value": 4
+          },
+          {
+            "Title": "Biological membranes",
+            "Description": "structure, transport, diffusion, osmosis, active transport",
+            "value": 4
+          },
+          {
+            "Title": "Cell division, diversity, and organisation",
+            "Description": "mitosis, meiosis, stem cells, specialised cells",
+            "value": 4
+          }
+        ]
+      },
+      {
+        "Name": "Module 3",
+        "value": 3,
+        "Title": "Exchange and Transport",
+        "Description": "Systems for material exchange in organisms",
+        "Subtopics": [
+          {
+            "Title": "Exchange surfaces",
+            "Description": "SA:V, diffusion, gas exchange in humans, insects, fish",
+            "value": 4
+          },
+          {
+            "Title": "Transport in animals",
+            "Description": "circulatory system, blood vessels, heart, cardiac cycle, oxygen dissociation",
+            "value": 4
+          },
+          {
+            "Title": "Transport in plants",
+            "Description": "xylem, phloem, transpiration, translocation",
+            "value": 4
+          }
+        ]
+      },
+      {
+        "Name": "Module 4",
+        "value": 3,
+        "Title": "Biodiversity, Evolution & Disease",
+        "Description": "Principles of classification, evolution, and disease",
+        "Subtopics": [
+          {
+            "Title": "Disease and the immune system",
+            "Description": "pathogens, primary & secondary response, vaccines",
+            "value": 4
+          },
+          {
+            "Title": "Biodiversity",
+            "Description": "sampling, classification, genetic diversity, conservation",
+            "value": 4
+          },
+          {
+            "Title": "Evolution and natural selection",
+            "Description": "Darwin, evidence, classification systems",
+            "value": 4
+          }
+        ]
+      }
+    ]
+  },
+  "Biology Year 13": {
+    "value": 1,
+    "Title": "OCR A-Level Biology Year 13 (H421)",
+    "Topics": [
+      {
+        "Name": "Module 5",
+        "value": 3,
+        "Title": "Communication, Homeostasis & Energy",
+        "Description": "Regulation systems and energy processes",
+        "Subtopics": [
+          {
+            "Title": "Communication and homeostasis",
+            "Description": "neuronal and hormonal communication",
+            "value": 4
+          },
+          {
+            "Title": "Excretion",
+            "Description": "liver, kidneys, nitrogenous waste",
+            "value": 4
+          },
+          {
+            "Title": "Neuronal communication",
+            "Description": "nerve impulses, synapses",
+            "value": 4
+          },
+          {
+            "Title": "Hormonal communication",
+            "Description": "endocrine system, adrenaline, insulin/glucagon",
+            "value": 4
+          },
+          {
+            "Title": "Plant and animal responses",
+            "Description": "tropisms, reflexes, muscle contraction",
+            "value": 4
+          },
+          {
+            "Title": "Photosynthesis",
+            "Description": "light-dependent & light-independent reactions, Calvin cycle",
+            "value": 4
+          },
+          {
+            "Title": "Respiration",
+            "Description": "glycolysis, link reaction, Krebs cycle, oxidative phosphorylation",
+            "value": 4
+          }
+        ]
+      },
+      {
+        "Name": "Module 6",
+        "value": 3,
+        "Title": "Genetics, Evolution & Ecosystems",
+        "Description": "Advanced genetics and ecology",
+        "Subtopics": [
+          {
+            "Title": "Cellular control",
+            "Description": "gene expression, operons, mutations",
+            "value": 4
+          },
+          {
+            "Title": "Patterns of inheritance",
+            "Description": "monohybrid, dihybrid, sex-linked, chi-squared tests",
+            "value": 4
+          },
+          {
+            "Title": "Manipulating genomes",
+            "Description": "genetic engineering, PCR, gene sequencing",
+            "value": 4
+          },
+          {
+            "Title": "Cloning and biotechnology",
+            "Description": "microorganisms, artificial cloning, tissue culture",
+            "value": 4
+          },
+          {
+            "Title": "Ecosystems",
+            "Description": "food chains, nitrogen/carbon cycles, conservation",
+            "value": 4
+          },
+          {
+            "Title": "Populations and sustainability",
+            "Description": "competition, predator-prey, sustainable management",
+            "value": 4
+          }
+        ]
+      }
+    ]
+  },
+  "Chemistry": {
+    "value": 1,
+    "Title": "OCR A-Level Chemistry (H432)",
+    "Topics": [
+      {
+        "Name": "Module 1",
+        "value": 3,
+        "Title": "Practical Skills in Chemistry",
+        "Description": "Laboratory techniques and research skills",
+        "Subtopics": [
+          {
+            "Title": "Planning",
+            "Description": "Experimental planning and design",
+            "value": 4
+          },
+          {
+            "Title": "Implementing",
+            "Description": "Laboratory procedures and techniques",
+            "value": 4
+          },
+          {
+            "Title": "Analysis",
+            "Description": "Data analysis and interpretation",
+            "value": 4
+          },
+          {
+            "Title": "Evaluation",
+            "Description": "Assessing validity and reliability",
+            "value": 4
+          }
+        ]
+      },
+      {
+        "Name": "Module 2",
+        "value": 3,
+        "Title": "Foundations in Chemistry",
+        "Description": "Core chemical concepts and principles",
+        "Subtopics": [
+          {
+            "Title": "Atoms, compounds, molecules, and equations",
+            "Description": "Basic concepts and equations",
+            "value": 4
+          },
+          {
+            "Title": "Amount of substance",
+            "Description": "moles, Avogadro's constant, gas volume calculations",
+            "value": 4
+          },
+          {
+            "Title": "Acid-base reactions",
+            "Description": "Basic acid-base chemistry",
+            "value": 4
+          },
+          {
+            "Title": "Redox reactions",
+            "Description": "Oxidation and reduction",
+            "value": 4
+          },
+          {
+            "Title": "Electron structure",
+            "Description": "Atomic structure and electron configuration",
+            "value": 4
+          },
+          {
+            "Title": "Bonding and structure",
+            "Description": "ionic, covalent, metallic bonding, intermolecular forces",
+            "value": 4
+          }
+        ]
+      },
+      {
+        "Name": "Module 3",
+        "value": 3,
+        "Title": "Periodic Table and Energy",
+        "Description": "Periodic trends and thermodynamics",
+        "Subtopics": [
+          {
+            "Title": "Periodicity",
+            "Description": "Periodic trends and properties",
+            "value": 4
+          },
+          {
+            "Title": "Group 2",
+            "Description": "alkaline earth metals",
+            "value": 4
+          },
+          {
+            "Title": "Group 7",
+            "Description": "halogens",
+            "value": 4
+          },
+          {
+            "Title": "Qualitative analysis",
+            "Description": "Analysis techniques",
+            "value": 4
+          },
+          {
+            "Title": "Enthalpy changes and calorimetry",
+            "Description": "Energy changes in reactions",
+            "value": 4
+          },
+          {
+            "Title": "Reaction rates and catalysts",
+            "Description": "Kinetics fundamentals",
+            "value": 4
+          },
+          {
+            "Title": "Chemical equilibrium",
+            "Description": "Basic equilibrium concepts",
+            "value": 4
+          }
+        ]
+      },
+      {
+        "Name": "Module 4",
+        "value": 3,
+        "Title": "Core Organic Chemistry",
+        "Description": "Fundamentals of organic compounds",
+        "Subtopics": [
+          {
+            "Title": "Basic concepts of organic chemistry",
+            "Description": "nomenclature, functional groups, isomerism",
+            "value": 4
+          },
+          {
+            "Title": "Alkanes",
+            "Description": "structure, properties, combustion, free radical substitution",
+            "value": 4
+          },
+          {
+            "Title": "Alkenes",
+            "Description": "structure, electrophilic addition, polymerization",
+            "value": 4
+          },
+          {
+            "Title": "Alcohols",
+            "Description": "oxidation, dehydration, esterification",
+            "value": 4
+          },
+          {
+            "Title": "Haloalkanes",
+            "Description": "nucleophilic substitution, hydrolysis",
+            "value": 4
+          },
+          {
+            "Title": "Organic synthesis pathways",
+            "Description": "Synthesis routes",
+            "value": 4
+          },
+          {
+            "Title": "Spectroscopy",
+            "Description": "Infrared (IR) and mass spectrometry (MS)",
+            "value": 4
+          }
+        ]
+      },
+      {
+        "Name": "Module 5",
+        "value": 3,
+        "Title": "Physical Chemistry and Transition Elements",
+        "Description": "Advanced thermodynamics and d-block elements",
+        "Subtopics": [
+          {
+            "Title": "Reaction rates",
+            "Description": "rate equations, orders of reaction, rate-determining step",
+            "value": 4
+          },
+          {
+            "Title": "Equilibrium",
+            "Description": "Kc, Kp, Le Chatelier's principle",
+            "value": 4
+          },
+          {
+            "Title": "Acids, bases, and buffers",
+            "Description": "pH calculations, titration curves",
+            "value": 4
+          },
+          {
+            "Title": "Thermodynamics",
+            "Description": "Enthalpy, entropy, and Gibbs free energy",
+            "value": 4
+          },
+          {
+            "Title": "Redox and electrode potentials",
+            "Description": "Electrochemistry",
+            "value": 4
+          },
+          {
+            "Title": "Transition elements",
+            "Description": "complex ions, oxidation states, precipitation reactions",
+            "value": 4
+          }
+        ]
+      }
+    ]
+  },
+    "Psychology": {
+        "value": 1,
+        "Title": "AQA A-Level Psychology (7182)",
+        "Topics": [
+          {
+            "Name": "Social Influence",
+            "value": 3,
+            "Title": "Social Influence (Paper 1)",
+            "Description": "Understanding social influence processes",
+            "Subtopics": [
+              {
+                "Title": "Compliance",
+                "Description": "Publicly conforming while privately disagreeing.",
+                "value": 4
+              },
+              {
+                "Title": "Identification",
+                "Description": "Conforming to a group because we value it.",
+                "value": 4
+              },
+              {
+                "Title": "Internalisation",
+                "Description": "Deep conformity where beliefs are changed permanently.",
+                "value": 4
+              },
+              {
+                "Title": "Asch's Conformity Experiment",
+                "Description": "Study on majority influence and group pressure.",
+                "value": 4
+              },
+              {
+                "Title": "Zimbardo's Stanford Prison Experiment",
+                "Description": "Study on the effects of situational factors on behavior.",
+                "value": 4
+              },
+              {
+                "Title": "Milgram's Obedience Experiment",
+                "Description": "Study on obedience to authority figures.",
+                "value": 4
+              },
+              {
+                "Title": "Agentic State",
+                "Description": "A state where individuals obey orders due to diffusion of responsibility.",
+                "value": 4
+              },
+              {
+                "Title": "Minority Influence",
+                "Description": "How small groups can bring about social change.",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "Name": "Memory",
+            "value": 3,
+            "Title": "Memory (Paper 1)",
+            "Description": "Cognitive processes of memory",
+            "Subtopics": [
+              {
+                "Title": "Multi-store Model",
+                "Description": "A model proposing three memory stores: sensory, short-term, and long-term.",
+                "value": 4
+              },
+              {
+                "Title": "Working Memory Model",
+                "Description": "A more detailed model of short-term memory with different components.",
+                "value": 4
+              },
+              {
+                "Title": "Long-term Memory Types",
+                "Description": "Episodic, semantic, and procedural memory distinctions.",
+                "value": 4
+              },
+              {
+                "Title": "Forgetting Mechanisms",
+                "Description": "Explanations include interference and retrieval failure.",
+                "value": 4
+              },
+              {
+                "Title": "Eyewitness Testimony",
+                "Description": "Factors affecting accuracy, such as misleading information.",
+                "value": 4
+              },
+              {
+                "Title": "Cognitive Interview",
+                "Description": "A technique to improve accuracy of eyewitness recall.",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "Name": "Attachment",
+            "value": 3,
+            "Title": "Attachment (Paper 1)",
+            "Description": "Development of infant-caregiver bonds",
+            "Subtopics": [
+              {
+                "Title": "Caregiver-Infant Interactions",
+                "Description": "How infants bond with caregivers through reciprocity and interactional synchrony.",
+                "value": 4
+              },
+              {
+                "Title": "Schaffer's Stages of Attachment",
+                "Description": "Stages of infant attachment from asocial to multiple attachments.",
+                "value": 4
+              },
+              {
+                "Title": "Imprinting (Lorenz)",
+                "Description": "Early attachment behavior observed in animals.",
+                "value": 4
+              },
+              {
+                "Title": "Harlow's Studies",
+                "Description": "Research on monkeys highlighting the importance of comfort in attachment.",
+                "value": 4
+              },
+              {
+                "Title": "Bowlby's Attachment Theory",
+                "Description": "Explains attachment as an evolutionary necessity.",
+                "value": 4
+              },
+              {
+                "Title": "Ainsworth's Strange Situation",
+                "Description": "Study identifying attachment types: secure, insecure-avoidant, and insecure-resistant.",
+                "value": 4
+              },
+              {
+                "Title": "Cultural Variations",
+                "Description": "Cross-cultural differences in attachment styles.",
+                "value": 4
+              },
+              {
+                "Title": "Maternal Deprivation",
+                "Description": "Bowlby's theory on the effects of early separation.",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "Name": "Psychopathology",
+            "value": 3,
+            "Title": "Psychopathology (Paper 1)",
+            "Description": "Study of psychological disorders",
+            "Subtopics": [
+              {
+                "Title": "Definitions of Abnormality",
+                "Description": "Statistical infrequency, deviation from norms, and failure to function adequately.",
+                "value": 4
+              },
+              {
+                "Title": "Characteristics of Disorders",
+                "Description": "Common symptoms of phobias, depression, and OCD.",
+                "value": 4
+              },
+              {
+                "Title": "Behavioral Explanations",
+                "Description": "How learning processes contribute to disorders.",
+                "value": 4
+              },
+              {
+                "Title": "Cognitive Explanations",
+                "Description": "The role of thinking patterns in mental illness.",
+                "value": 4
+              },
+              {
+                "Title": "Biological Explanations",
+                "Description": "Genetic and neural causes of mental disorders.",
+                "value": 4
+              },
+              {
+                "Title": "Therapeutic Interventions",
+                "Description": "Treatments including CBT, drug therapy, and systematic desensitization.",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "Name": "Approaches",
+            "value": 3,
+            "Title": "Approaches (Paper 2)",
+            "Description": "Different psychological perspectives",
+            "Subtopics": [
+              {
+                "Title": "Behaviorism",
+                "Description": "Learning through conditioning (classical and operant).",
+                "value": 4
+              },
+              {
+                "Title": "Cognitive Approach",
+                "Description": "Mental processes such as perception and memory.",
+                "value": 4
+              },
+              {
+                "Title": "Psychodynamic Approach",
+                "Description": "Freudian theory on unconscious processes.",
+                "value": 4
+              },
+              {
+                "Title": "Humanistic Approach",
+                "Description": "Focus on free will and self-actualization.",
+                "value": 4
+              },
+              {
+                "Title": "Biological Approach",
+                "Description": "How genetics and physiology affect behavior.",
+                "value": 4
+              },
+              {
+                "Title": "Social Learning Theory",
+                "Description": "Learning through observation and imitation.",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "Name": "Biopsychology",
+            "value": 3,
+            "Title": "Biopsychology (Paper 2)",
+            "Description": "Biological basis of behavior",
+            "Subtopics": [
+              {
+                "Title": "Nervous System",
+                "Description": "Structure and function of the CNS and PNS.",
+                "value": 4
+              },
+              {
+                "Title": "Endocrine System",
+                "Description": "Hormonal regulation of behavior.",
+                "value": 4
+              },
+              {
+                "Title": "Fight or Flight Response",
+                "Description": "How the body reacts to stress.",
+                "value": 4
+              },
+              {
+                "Title": "Brain Lateralisation",
+                "Description": "Differences between left and right hemispheres.",
+                "value": 4
+              },
+              {
+                "Title": "Neurotransmitters",
+                "Description": "Chemical messengers in the brain affecting behavior.",
+                "value": 4
+              },
+              {
+                "Title": "Neural Plasticity",
+                "Description": "How the brain adapts to experience and injury.",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "Name": "Research Methods",
+            "value": 3,
+            "Title": "Research Methods (Paper 2)",
+            "Description": "Techniques for psychological investigation",
+            "Subtopics": [
+              {
+                "Title": "Experimental Methods",
+                "Description": "Lab, field, and natural experiments.",
+                "value": 4
+              },
+              {
+                "Title": "Correlational Studies",
+                "Description": "Examining relationships between variables.",
+                "value": 4
+              },
+              {
+                "Title": "Observational Studies",
+                "Description": "Studying behavior in natural settings.",
+                "value": 4
+              },
+              {
+                "Title": "Self-report Measures",
+                "Description": "Questionnaires and interviews in research.",
+                "value": 4
+              },
+              {
+                "Title": "Ethical Considerations",
+                "Description": "Protecting participants in psychological research.",
+                "value": 4
+              },
+              {
+                "Title": "Statistical Analysis",
+                "Description": "Measures of central tendency, dispersion, and significance testing.",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "Name": "Issues & Debates",
+            "value": 3,
+            "Title": "Issues & Debates (Paper 3)",
+            "Description": "Key theoretical controversies in psychology",
+            "Subtopics": [
+              {
+                "Title": "Nature vs. Nurture",
+                "Description": "The role of genetics vs. environment in behavior.",
+                "value": 4
+              },
+              {
+                "Title": "Free Will vs. Determinism",
+                "Description": "Whether behavior is chosen or pre-determined.",
+                "value": 4
+              },
+              {
+                "Title": "Holism vs. Reductionism",
+                "Description": "The complexity of human behavior explanations.",
+                "value": 4
+              },
+              {
+                "Title": "Idiographic vs. Nomothetic",
+                "Description": "Studying individuals vs. generalizing findings.",
+                "value": 4
+              },
+              {
+                "Title": "Gender Bias",
+                "Description": "How research may be androcentric or gynocentric.",
+                "value": 4
+              },
+              {
+                "Title": "Cultural Bias",
+                "Description": "Ethnocentrism and imposed etic in research.",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "Name": "Relationships",
+            "value": 3,
+            "Title": "Relationships (Paper 3)",
+            "Description": "Psychology of human relationships",
+            "Subtopics": [
+              {
+                "Title": "Evolutionary Explanations",
+                "Description": "How natural selection influences relationships.",
+                "value": 4
+              },
+              {
+                "Title": "Attraction Factors",
+                "Description": "Physical attractiveness and matching hypothesis.",
+                "value": 4
+              },
+              {
+                "Title": "Social Exchange Theory",
+                "Description": "Relationships as cost-benefit analyses.",
+                "value": 4
+              },
+              {
+                "Title": "Equity Theory",
+                "Description": "Balance and fairness in relationships.",
+                "value": 4
+              },
+              {
+                "Title": "Relationship Breakdown",
+                "Description": "Stages of ending relationships.",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "Name": "Schizophrenia",
+            "value": 3,
+            "Title": "Schizophrenia (Paper 3)",
+            "Description": "Study of schizophrenia as a psychological disorder",
+            "Subtopics": [
+              {
+                "Title": "Classification",
+                "Description": "ICD and DSM diagnostic criteria.",
+                "value": 4
+              },
+              {
+                "Title": "Biological Explanations",
+                "Description": "Genetics, dopamine hypothesis, and brain structures.",
+                "value": 4
+              },
+              {
+                "Title": "Psychological Explanations",
+                "Description": "Family dysfunction and cognitive deficits.",
+                "value": 4
+              },
+              {
+                "Title": "Drug Therapy",
+                "Description": "Antipsychotics and their effectiveness.",
+                "value": 4
+              },
+              {
+                "Title": "Psychological Therapies",
+                "Description": "CBT, family therapy, and token economies.",
+                "value": 4
+              }
+            ]
+          }
+        ]
+      }
+}

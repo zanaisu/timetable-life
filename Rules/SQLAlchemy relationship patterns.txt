@@ -1,0 +1,114 @@
+# SQLAlchemy Relationship Best Practices
+
+## Relationship Conflict Resolution
+
+When working with SQLAlchemy relationships in the Timetable application, follow these guidelines to avoid common relationship conflicts and issues:
+
+### 1. Avoid Duplicate Relationship Definitions
+
+**Problem:** Defining the same relationship in both related models can cause conflicts.
+**Example Issue:** "Error creating backref 'user' on relationship 'User.tasks': property of that name exists on mapper 'Mapper[Task(tasks)]'"
+
+**Solution:**
+- Define the relationship in one model only
+- Use backref to establish the bidirectional relationship
+- If defined in both models, use different relationship names
+
+**Good Example:**
+```python
+# In User model
+tasks = db.relationship('Task', backref='assigned_user', lazy=True)
+
+# In Task model
+# No need to define the reverse relationship, backref handles it
+```
+
+### 2. Use Appropriate Naming for Backref Relationships
+
+**Problem:** Name conflicts when multiple relationships reference the same model
+**Solution:** Use descriptive, unique names for backrefs that reflect their purpose
+
+**Good Example:**
+```python
+# Different relationships to the same target model
+recent_tasks = db.relationship('Task', backref='creator', primaryjoin="User.id==Task.creator_id")
+assigned_tasks = db.relationship('Task', backref='assignee', primaryjoin="User.id==Task.assignee_id")
+```
+
+### 3. Use Back_populates Instead of Backref for Complex Relationships
+
+**Problem:** Backref can be less explicit and harder to track for complex relationship structures
+**Solution:** Use back_populates for more explicit control over bidirectional relationships
+
+**Good Example:**
+```python
+# In User model
+tasks = db.relationship('Task', back_populates='owner', lazy=True)
+
+# In Task model
+owner = db.relationship('User', back_populates='tasks', lazy=True)
+```
+
+### 4. Use Foreign_keys Parameter for Multiple Relationships to the Same Table
+
+**Problem:** Ambiguity when multiple foreign keys reference the same table
+**Solution:** Explicitly specify which foreign key each relationship uses
+
+**Good Example:**
+```python
+# In Task model
+user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+# Specify which foreign key to use for each relationship
+user = db.relationship('User', foreign_keys=[user_id])
+reviewer = db.relationship('User', foreign_keys=[reviewer_id])
+```
+
+### 5. Properly Initialize Database After Model Changes
+
+After making changes to SQLAlchemy models, follow these steps to properly initialize the database:
+
+1. Create tables with `db.create_all()` or Flask-Migrate
+2. Seed default data with CLI commands like `flask init-db`
+3. Import required data with commands like `flask import-data`
+4. Verify tables and relationships are correctly created
+
+### 6. Handle Parameter Consistency Between Related Functions
+
+Always ensure parameter types match across function calls. Common issues include:
+
+**Problem:** Some functions expect a User object while others expect a user_id
+**Solution:** Standardize parameter expectations or add appropriate conversion
+
+**Before (Problem):**
+```python
+task = generate_replacement_task(user_id, distribution=distribution)
+```
+
+**After (Fixed):**
+```python
+# Get user object
+user = User.query.get(user_id)
+if not user:
+    return []
+task = generate_replacement_task(user)  # Function expects User object
+```
+
+### 7. Add Proper Error Handling for Empty Database Scenarios
+
+**Problem:** Operations like division by zero when queries return empty results
+**Solution:** Add checks before operations that might fail with empty data
+
+**Example:**
+```python
+subjects = Subject.query.all()
+if not subjects:
+    # Handle empty case
+    return default_distribution
+    
+# Now safe to use len(subjects) in calculations
+equal_share = 1.0 / len(subjects)
+```
+
+Following these practices will help maintain the integrity of the database relationships and reduce errors when working with SQLAlchemy in the Timetable application.
